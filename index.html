@@ -16,8 +16,9 @@
           
             <div class="setup-container">
                 <div class="button-group">
-                    <button id="startGameButton" class="main-button">Start Game</button>
-                    <button id="settingsButton" class="control-button">⚙️</button>
+                    <button id="startGameButton" class="main-button">🚀Start Game</button>
+                    <button id="settingsButton" class="control-button">⚙️Settings</button>
+                    <button id="historyButton" class="control-button">📜</button>
                 </div>
             </div>
 
@@ -36,11 +37,11 @@
                     <div class="input-group">
                         <label>Prize Name, Draw Count (2-column CSV):</label>
                         <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count"
-                        style="width: 100%; font-family: monospace;">iPad,3
-Wireless Headphones,5
-Smartwatch,4
-Gaming Console,2
-E-Book Reader,6</textarea>
+                        style="width: 100%; font-family: monospace;">Amazon Kindle Paperwhite,6
+Sony WH-1000XM5 Wireless Headphones,5
+Apple Watch Series 9,4
+PlayStation 5 Digital Edition,2
+Apple iPad Pro 12.9-inch,1</textarea>
                     </div>
                     <div class="button-group">
                         <button id="saveSettings" class="main-button">Save</button>
@@ -49,7 +50,7 @@ E-Book Reader,6</textarea>
                 </div>
             </div>
 
-            <h3>Copyright 2025. Fullstackstudio. all rights reserved.</h3>
+            
         </div>
 
         <!-- Game Screen -->
@@ -59,6 +60,7 @@ E-Book Reader,6</textarea>
                 <button id="exitButton" class="control-button">End Game</button>
             </div>
 
+            <h2 id="currentPrizeDisplay" class="prize-display"></h2>
             <div class="card-container"></div>
 
             <div class="footer">
@@ -91,8 +93,30 @@ E-Book Reader,6</textarea>
                 <button id="newGame" class="main-button">New Game</button>
             </div>
         </div>
+
+        <!-- History Screen -->
+        <div id="historyScreen" class="screen">
+            <h1>Game History</h1>
+            <div id="historyList" class="history-container"></div>
+            <div class="button-group">
+                <button id="backToStart" class="control-button">Back to Start</button>
+            </div>
+        </div>
+
+        <!-- History Content Lightbox -->
+        <div id="historyContentLightbox" class="lightbox hidden">
+            <div class="lightbox-content">
+                <h3 id="historyContentTitle"></h3>
+                <div id="historyContentText" class="history-content"></div>
+                <div class="button-group">
+                    <button id="closeHistoryContent" class="control-button">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
+   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
 

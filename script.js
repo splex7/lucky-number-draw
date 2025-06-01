@@ -9,8 +9,19 @@ class DrawSystem {
         this.isAnimating = false;
         this.maxNumber = 1000;
         
+        // Create and preload audio object
+        this.flipSound = new Audio('flip.mp3');
+        this.flipSound.preload = "auto";
+        this.flipSound.load();
+
+        // Ensure audio object is reused and reset properly
+        this.flipSound.addEventListener('ended', () => {
+            this.flipSound.currentTime = 0;
+        });
+        
         this.initializeElements();
         this.setupEventListeners();
+        this.loadHistory();
     }
 
     initializeElements() {
@@ -50,6 +61,18 @@ class DrawSystem {
         this.adjustCardCountInput = document.getElementById('adjustCardCount');
         this.confirmAdjustButton = document.getElementById('confirmAdjust');
         this.cancelAdjustButton = document.getElementById('cancelAdjust');
+
+        // History elements
+        this.historyScreen = document.getElementById('historyScreen');
+        this.historyList = document.getElementById('historyList');
+        this.backToStartButton = document.getElementById('backToStart');
+        this.historyButton = document.getElementById('historyButton');
+        
+        // History content lightbox elements
+        this.historyContentLightbox = document.getElementById('historyContentLightbox');
+        this.historyContentTitle = document.getElementById('historyContentTitle');
+        this.historyContentText = document.getElementById('historyContentText');
+        this.closeHistoryContentButton = document.getElementById('closeHistoryContent');
     }
 
     setupEventListeners() {
@@ -75,6 +98,14 @@ class DrawSystem {
                 this.startCardFlips();
             }
         });
+
+        // History event listeners
+        this.backToStartButton.addEventListener('click', () => this.switchScreen('startScreen'));
+        this.historyButton.addEventListener('click', () => {
+            this.loadHistory();
+            this.switchScreen('historyScreen');
+        });
+        this.closeHistoryContentButton.addEventListener('click', () => this.hideHistoryContent());
     }
 
     switchScreen(screenId) {
@@ -116,6 +147,13 @@ class DrawSystem {
         this.cardsRemainingDisplay.textContent = `Remaining Cards: ${count}`;
     }
 
+    // Function to play flip sound with reset and pause fix
+    playFlipSound() {
+        this.flipSound.pause(); // Stop any ongoing playback to prevent delay
+        this.flipSound.currentTime = 0; // Reset playback time
+        this.flipSound.play(); // Start playing
+    }
+
     async flipCard(index) {
         const card = document.querySelector(`[data-index="${index}"]`);
         card.classList.add('flipped');
@@ -124,9 +162,8 @@ class DrawSystem {
         const backside = card.querySelector('.card-back');
         backside.textContent = this.currentRoundNumbers[index];
 
-        // Play flip sound
-        const flipSound = new Audio('flipcard.mp3');
-        flipSound.play();
+        // Play flip sound using the improved method
+        this.playFlipSound();
         
         await anime({
             targets: card,
@@ -144,10 +181,49 @@ class DrawSystem {
         this.isAnimating = true;
         for (let i = 0; i < this.currentRoundNumbers.length; i++) {
             await this.flipCard(i);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 마지막 카드인 경우 confetti 효과 실행
+            if (i === this.currentRoundNumbers.length - 1) {
+                this.triggerConfetti();
+            }
         }
         this.isAnimating = false;
-        this.nextRoundButton.style.display = 'block';
+        this.nextRoundButton.disabled = false;
+    }
+
+    triggerConfetti() {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            
+            // 왼쪽에서 발사
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+            });
+            
+            // 오른쪽에서 발사
+            confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+            });
+        }, 250);
     }
 
     startGame() {
@@ -199,8 +275,9 @@ class DrawSystem {
         });
         
         this.switchScreen('gameScreen');
-        this.currentRoundDisplay.textContent = `${this.currentRound} - ${this.prizes[0]}`;
-        this.nextRoundButton.style.display = 'none';
+        this.currentRoundDisplay.textContent = `${this.currentRound}`;
+        document.getElementById('currentPrizeDisplay').textContent = this.prizes[0];
+        this.nextRoundButton.disabled = true;
     }
 
     showNextRound() {
@@ -231,8 +308,9 @@ class DrawSystem {
             numbers: [...this.currentRoundNumbers]
         });
         
-        this.currentRoundDisplay.textContent = `${this.currentRound} - ${currentPrize}`;
-        this.nextRoundButton.style.display = 'none';
+        this.currentRoundDisplay.textContent = `${this.currentRound}`;
+        document.getElementById('currentPrizeDisplay').textContent = currentPrize;
+        this.nextRoundButton.disabled = true;
         this.showLightbox();
     }
 
@@ -310,6 +388,7 @@ class DrawSystem {
         // Combine both lists
         const finalResults = resultsText + '\n' + deliveryList;
         this.resultsContent.textContent = finalResults;
+        this.saveToHistory();
         this.switchScreen('resultsScreen');
     }
 
@@ -331,11 +410,11 @@ class DrawSystem {
         this.roundResults = [];
         
         // Set default preset values
-        const defaultPreset = `iPad,3
-Wireless Headphones,5
-Smartwatch,4
-Gaming Console,2
-E-Book Reader,6`;
+        const defaultPreset = `Amazon Kindle Paperwhite,6
+Sony WH-1000XM5 Wireless Headphones,5
+Apple Watch Series 9,4
+PlayStation 5 Digital Edition,2
+Apple iPad Pro 12.9-inch,1`;
         
         this.presetInput.value = defaultPreset;
         this.maxNumberInput.value = '500';
@@ -362,6 +441,97 @@ E-Book Reader,6`;
         this.titleElement.textContent = newTitle;
         
         this.hideSettings();
+    }
+
+    generateGameId() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `Game#${year}${month}${day}${hours}${minutes}`;
+    }
+
+    saveToHistory() {
+        const gameId = this.generateGameId();
+        const gameData = {
+            id: gameId,
+            date: new Date().toLocaleString(),
+            results: this.roundResults,
+            title: document.querySelector('h1').textContent
+        };
+        
+        let history = JSON.parse(localStorage.getItem('drawHistory') || '[]');
+        history.unshift(gameData);
+        localStorage.setItem('drawHistory', JSON.stringify(history));
+    }
+
+    loadHistory() {
+        const history = JSON.parse(localStorage.getItem('drawHistory') || '[]');
+        this.historyList.innerHTML = '';
+        
+        history.forEach(game => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            
+            const content = document.createElement('div');
+            content.className = 'history-content';
+            content.textContent = `${game.title}\n${game.date}`;
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.deleteHistoryItem(game.id);
+            };
+            
+            item.appendChild(content);
+            item.appendChild(deleteBtn);
+            
+            item.onclick = () => this.showHistoryContent(game);
+            this.historyList.appendChild(item);
+        });
+    }
+
+    deleteHistoryItem(gameId) {
+        if (confirm('Are you sure you want to delete this history item?')) {
+            let history = JSON.parse(localStorage.getItem('drawHistory') || '[]');
+            history = history.filter(game => game.id !== gameId);
+            localStorage.setItem('drawHistory', JSON.stringify(history));
+            this.loadHistory();
+        }
+    }
+
+    showHistoryContent(game) {
+        let content = '';
+        game.results.forEach(result => {
+            content += `Round ${result.round} - ${result.prize}:\n`;
+            content += result.numbers.sort((a, b) => a - b).join(', ') + '\n\n';
+        });
+        
+        const allNumbers = [];
+        game.results.forEach(result => {
+            result.numbers.forEach(num => {
+                allNumbers.push({ number: num, prize: result.prize });
+            });
+        });
+        
+        allNumbers.sort((a, b) => a.number - b.number);
+        
+        content += '\nDelivery List:\n\n';
+        allNumbers.forEach(item => {
+            content += `${item.number} - ${item.prize}\n`;
+        });
+        
+        this.historyContentTitle.textContent = game.title;
+        this.historyContentText.textContent = content;
+        this.historyContentLightbox.classList.remove('hidden');
+    }
+
+    hideHistoryContent() {
+        this.historyContentLightbox.classList.add('hidden');
     }
 }
 
