@@ -4,6 +4,8 @@ A modern web-based lucky draw system for prize distribution events. This system 
 
 ## English Version 🇺🇸  
 
+📌 **[Live Demo](https://splex7.github.io/LuckyNumberDraw/)** — Try the Lucky Number Draw system right in your browser!
+
 ### Features  
 - **Interactive Card Drawing**: Animated card flipping interface for an engaging draw experience  
 - **Customizable Settings**:  
@@ -51,6 +53,8 @@ A modern web-based lucky draw system for prize distribution events. This system 
 ---
 
 ## 한국어 버전 🇰🇷  
+
+📌 **[라이브 데모 바로가기](https://splex7.github.io/LuckyNumberDraw/)** — 브라우저에서 바로 행운 번호 추첨 시스템을 체험해보세요!
 
 ### 행운 번호 추첨 시스템  
 
@@ -102,5 +106,7 @@ A modern web-based lucky draw system for prize distribution events. This system 
 
 ---
 
-## License  
-Copyright 2025. Fullstackstudio. All rights reserved.  
+## License
+
+This project is licensed under the MIT License – feel free to use, modify, distribute, and even commercialize it without restrictions. See the [LICENSE](LICENSE) file for details.
+
