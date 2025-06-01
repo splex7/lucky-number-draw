@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Number Draw System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <h1>Lucky Number Draw</h1>
+          
+            <div class="setup-container">
+                <div class="button-group">
+                    <button id="startGameButton" class="main-button">Start Game</button>
+                    <button id="settingsButton" class="control-button">⚙️</button>
+                </div>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settingsModal" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Settings</h2>
+                    <div class="input-group">
+                        <label>Title (Customize with Your Desired Title) </label>
+                        <input type="text" id="titleInput" value="Lucky Number Draw" class="title-input">
+                    </div>
+                    <div class="input-group">
+                        <label>Draw Range (Max 1000)</label>
+                        <input type="number" id="maxNumber" min="1" max="1000" value="500">
+                    </div>
+                    <div class="input-group">
+                        <label>Prize Name, Draw Count (2-column CSV):</label>
+                        <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count"
+                        style="width: 100%; font-family: monospace;">iPad,3
+Wireless Headphones,5
+Smartwatch,4
+Gaming Console,2
+E-Book Reader,6</textarea>
+                    </div>
+                    <div class="button-group">
+                        <button id="saveSettings" class="main-button">Save</button>
+                        <button id="closeSettings" class="control-button">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Copyright 2025. Fullstackstudio. all rights reserved.</h3>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="header">
+                <div class="round-info">Round <span id="currentRound">1</span></div>
+                <button id="exitButton" class="control-button">End Game</button>
+            </div>
+
+            <div class="card-container"></div>
+
+            <div class="footer">
+                <div class="card-count"><span id="cardsRemaining">0</span></div>
+                <button id="nextRoundButton" class="control-button">Next Round</button>
+            </div>
+
+            <!-- Lightbox for adjusting card count -->
+            <div id="cardAdjustLightbox" class="lightbox hidden">
+                <div class="lightbox-content">
+                    <h1 id="currentPrizeName" class="prize-title"></h1>
+                    <div class="input-group">
+                        <label>Number of cards to draw in this round:</label>
+                        <input type="number" id="adjustCardCount" min="1" max="400" value="1">
+                    </div>
+                    <div class="button-group">
+                        <button id="confirmAdjust" class="main-button">Confirm</button>
+                        <button id="cancelAdjust" class="control-button">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <h1>Game Results</h1>
+            <div id="resultsContent" class="results-container"></div>
+            <div class="button-group">
+                <button id="copyResults" class="control-button">Copy Results</button>
+                <button id="newGame" class="main-button">New Game</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
