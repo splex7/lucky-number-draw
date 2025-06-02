@@ -9,15 +9,17 @@ class DrawSystem {
         this.isAnimating = false;
         this.maxNumber = 1000;
         
-        // Create and preload audio object
-        this.flipSound = new Audio('flip.mp3');
-        this.flipSound.preload = "auto";
-        this.flipSound.load();
-
-        // Ensure audio object is reused and reset properly
-        this.flipSound.addEventListener('ended', () => {
-            this.flipSound.currentTime = 0;
-        });
+        // Create and preload audio objects for flip sounds
+        this.flipSoundA = new Audio('flip-a.mp3');
+        this.flipSoundA.preload = "auto";
+        this.flipSoundA.load();
+        this.flipSoundB = new Audio('flip-b.mp3');
+        this.flipSoundB.preload = "auto";
+        this.flipSoundB.load();
+        this.flipSoundA.addEventListener('ended', () => { this.flipSoundA.currentTime = 0; });
+        this.flipSoundB.addEventListener('ended', () => { this.flipSoundB.currentTime = 0; });
+        // 사운드 옵션 불러오기
+        this.selectedFlipSound = localStorage.getItem('flipSoundOption') || 'a';
         
         this.initializeElements();
         this.setupEventListeners();
@@ -106,6 +108,30 @@ class DrawSystem {
             this.switchScreen('historyScreen');
         });
         this.closeHistoryContentButton.addEventListener('click', () => this.hideHistoryContent());
+
+        // 사운드 옵션 라디오 및 미리듣기 버튼 이벤트
+        document.getElementById('flipSoundA').addEventListener('change', () => {
+            this.selectedFlipSound = 'a';
+            localStorage.setItem('flipSoundOption', 'a');
+        });
+        document.getElementById('flipSoundB').addEventListener('change', () => {
+            this.selectedFlipSound = 'b';
+            localStorage.setItem('flipSoundOption', 'b');
+        });
+        document.getElementById('flipSoundNone').addEventListener('change', () => {
+            this.selectedFlipSound = 'none';
+            localStorage.setItem('flipSoundOption', 'none');
+        });
+        document.getElementById('previewSoundA').addEventListener('click', () => {
+            this.flipSoundA.pause();
+            this.flipSoundA.currentTime = 0;
+            this.flipSoundA.play();
+        });
+        document.getElementById('previewSoundB').addEventListener('click', () => {
+            this.flipSoundB.pause();
+            this.flipSoundB.currentTime = 0;
+            this.flipSoundB.play();
+        });
     }
 
     switchScreen(screenId) {
@@ -149,9 +175,15 @@ class DrawSystem {
 
     // Function to play flip sound with reset and pause fix
     playFlipSound() {
-        this.flipSound.pause(); // Stop any ongoing playback to prevent delay
-        this.flipSound.currentTime = 0; // Reset playback time
-        this.flipSound.play(); // Start playing
+        if (this.selectedFlipSound === 'a') {
+            this.flipSoundA.pause();
+            this.flipSoundA.currentTime = 0;
+            this.flipSoundA.play();
+        } else if (this.selectedFlipSound === 'b') {
+            this.flipSoundB.pause();
+            this.flipSoundB.currentTime = 0;
+            this.flipSoundB.play();
+        } // 무음이면 아무것도 하지 않음
     }
 
     async flipCard(index) {
@@ -426,6 +458,11 @@ Apple iPad Pro 12.9-inch,1`;
 
     showSettings() {
         this.settingsModal.classList.remove('hidden');
+        // 사운드 옵션 라디오 상태 동기화
+        const opt = this.selectedFlipSound;
+        document.getElementById('flipSoundA').checked = (opt === 'a');
+        document.getElementById('flipSoundB').checked = (opt === 'b');
+        document.getElementById('flipSoundNone').checked = (opt === 'none');
     }
 
     hideSettings() {
@@ -440,6 +477,15 @@ Apple iPad Pro 12.9-inch,1`;
         const newTitle = this.titleInput.value.trim() || 'Lucky Number Draw';
         this.titleElement.textContent = newTitle;
         
+        // 사운드 옵션 저장
+        if (document.getElementById('flipSoundA').checked) {
+            this.selectedFlipSound = 'a';
+        } else if (document.getElementById('flipSoundB').checked) {
+            this.selectedFlipSound = 'b';
+        } else {
+            this.selectedFlipSound = 'none';
+        }
+        localStorage.setItem('flipSoundOption', this.selectedFlipSound);
         this.hideSettings();
     }
 

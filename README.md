@@ -110,3 +110,4 @@ A modern web-based lucky draw system for prize distribution events. This system 
 
 This project is licensed under the MIT License – feel free to use, modify, distribute, and even commercialize it without restrictions. See the [LICENSE](LICENSE) file for details.
 
+This project is licensed under the MIT License – feel free to use, modify, distribute, and even commercialize it without restrictions. See the [LICENSE](LICENSE) file for details.
