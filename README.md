@@ -1,5 +1,7 @@
 # Lucky Number Draw System  
 
+<img width="1671" alt="image" src="https://github.com/user-attachments/assets/3830b484-9f8e-4343-9c6e-bc1ea7e61c74" />
+
 A modern web-based lucky draw system for prize distribution events. This system provides an interactive and engaging way to randomly select winners for different prizes.  
 
 ## English Version 🇺🇸  
