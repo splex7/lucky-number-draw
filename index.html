@@ -18,6 +18,7 @@
                 <div class="button-group">
                     <button id="startGameButton" class="main-button">🚀Start Game</button>
                     <button id="settingsButton" class="control-button">⚙️Settings</button>
+                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: Start flips (when available)\nEnter (Lightbox): Confirm\n↑/↓: Increase/Decrease flip speed\n→: Next Round (when available)">❔Shortcuts</button>
                     <button id="historyButton" class="control-button">📜</button>
                 </div>
             </div>
@@ -31,8 +32,8 @@
                         <input type="text" id="titleInput" value="Lucky Number Draw" class="title-input">
                     </div>
                     <div class="input-group">
-                        <label>Draw Range (Max 1000)</label>
-                        <input type="number" id="maxNumber" min="1" max="1000" value="500">
+                        <label>Draw Range (e.g., 1-442, 501-872) — Max total 2000 numbers</label>
+                        <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872" value="1-500">
                     </div>
                     <div class="input-group">
                         <label>Prize Name, Draw Count (2-column CSV):</label>
@@ -42,6 +43,9 @@ Sony WH-1000XM5 Wireless Headphones,5
 Apple Watch Series 9,4
 PlayStation 5 Digital Edition,2
 Apple iPad Pro 12.9-inch,1</textarea>
+                        <div class="button-group" style="margin-top: 8px;">
+                            <button id="loadExampleButton" class="control-button" type="button">Load Example</button>
+                        </div>
                     </div>
                     <div class="input-group">
                         <label>Flip Sound Effect</label>
@@ -84,7 +88,7 @@ Apple iPad Pro 12.9-inch,1</textarea>
                     <h1 id="currentPrizeName" class="prize-title"></h1>
                     <div class="input-group">
                         <label>Number of cards to draw in this round:</label>
-                        <input type="number" id="adjustCardCount" min="1" max="400" value="1">
+                        <input type="number" id="adjustCardCount" min="1" max="2000" value="1">
                     </div>
                     <div class="button-group">
                         <button id="confirmAdjust" class="main-button">Confirm</button>
@@ -110,6 +114,7 @@ Apple iPad Pro 12.9-inch,1</textarea>
             <div id="historyList" class="history-container"></div>
             <div class="button-group">
                 <button id="backToStart" class="control-button">Back to Start</button>
+                <button id="clearHistory" class="control-button">Clear All</button>
             </div>
         </div>
 
@@ -120,6 +125,33 @@ Apple iPad Pro 12.9-inch,1</textarea>
                 <div id="historyContentText" class="history-content"></div>
                 <div class="button-group">
                     <button id="closeHistoryContent" class="control-button">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Game Confirm Lightbox -->
+        <div id="endGameConfirmLightbox" class="lightbox hidden">
+            <div class="lightbox-content">
+                <h3>End Game?</h3>
+                <div class="button-group">
+                    <button id="confirmEndGame" class="main-button">Confirm</button>
+                    <button id="cancelEndGame" class="control-button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shortcuts Lightbox -->
+        <div id="shortcutsLightbox" class="lightbox hidden">
+            <div class="lightbox-content">
+                <h3>Keyboard Shortcuts</h3>
+                <div class="history-content" style="white-space: pre-wrap;">
+Enter: Start flips (when available)
+Enter (Lightbox): Confirm
+↑/↓: Increase/Decrease flip speed
+→: Next Round (when available)
+                </div>
+                <div class="button-group">
+                    <button id="closeShortcuts" class="control-button">Close</button>
                 </div>
             </div>
         </div>

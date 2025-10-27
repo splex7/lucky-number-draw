@@ -5,7 +5,7 @@ body {
     display: flex;
     justify-content: center;
     /* align-items: center; */
-    background: url('background.png') center/cover no-repeat fixed;
+    background: url('background.jpg') center/cover no-repeat fixed;
     font-family: Arial, sans-serif;
     /* overf low: hidden; */
 }
@@ -14,12 +14,12 @@ h1 {
     color: white;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     margin-bottom: 2rem;
-    font-size: 5em;
+    font-size: 8em;
     text-align: center;
 }
 
 h2 {
-    font-size: 3em;
+    font-size: 6em;
 }
 h3 {
     font-size: 1.2em;;
@@ -192,7 +192,7 @@ h2, h3 {
 .card {
     perspective: 1000px;
     cursor: pointer;
-    aspect-ratio: 2/3;
+    aspect-ratio: 1 / 1;
     width: 100%;
     max-width: 180px;
 }
@@ -258,6 +258,7 @@ h2, h3 {
     font-size: 2.5em;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
+
 
 .lightbox {
     position: fixed;
@@ -383,11 +384,6 @@ h2, h3 {
         width: 95%;
     }
 
-    .prize-title {
-        font-size: 1.8em;
-        margin-bottom: 1rem;
-    }
-
     .input-group {
         margin-bottom: 0.8rem;
     }
@@ -410,7 +406,7 @@ h2, h3 {
     }
 
     .prize-display {
-        font-size: 1.5em;
+        font-size: 1.2em;
         margin: 0.5rem 0;
     }
 }
@@ -437,7 +433,8 @@ h2, h3 {
     padding: 20px;
     border-radius: 8px;
     width: 90%;
-    max-width: 500px;
+    max-width: 80vw;
+    min-width: 50vw;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -489,7 +486,7 @@ h2, h3 {
     color: white;
     text-align: center;
     margin: 1rem 0;
-    font-size: 2em;
+    font-size: 5em;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 

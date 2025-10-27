@@ -2,12 +2,16 @@ class DrawSystem {
     constructor() {
         this.rounds = [];
         this.prizes = [];
+        this.prizeImages = [];
         this.currentRound = 1;
-        this.usedNumbers = new Set();
+        this.usedNumbers = new Set(); // revealed winners
+        this.reservedNumbers = new Set(); // all allocated numbers (revealed or not)
         this.currentRoundNumbers = [];
         this.roundResults = [];
         this.isAnimating = false;
-        this.maxNumber = 1000;
+        this.numberPool = [];
+        this.maxLimit = 2000;
+        this.flipSpeedStep = 3; // 1..5, default 3
         
         // Create and preload audio objects for flip sounds
         this.flipSoundA = new Audio('flip-a.mp3');
@@ -26,6 +30,7 @@ class DrawSystem {
         this.loadHistory();
     }
 
+
     initializeElements() {
         // Screen elements
         this.startScreen = document.getElementById('startScreen');
@@ -43,7 +48,7 @@ class DrawSystem {
         // Input elements
         this.presetInput = document.getElementById('presetRounds');
         this.cardCountInput = document.getElementById('cardCount');
-        this.maxNumberInput = document.getElementById('maxNumber');
+        this.numberRangesInput = document.getElementById('numberRanges');
         
         // Buttons
         this.startGameButton = document.getElementById('startGameButton');
@@ -51,6 +56,7 @@ class DrawSystem {
         this.nextRoundButton = document.getElementById('nextRoundButton');
         this.copyResultsButton = document.getElementById('copyResults');
         this.newGameButton = document.getElementById('newGame');
+        this.loadExampleButton = document.getElementById('loadExampleButton');
         
         // Display elements
         this.currentRoundDisplay = document.getElementById('currentRound');
@@ -69,17 +75,28 @@ class DrawSystem {
         this.historyList = document.getElementById('historyList');
         this.backToStartButton = document.getElementById('backToStart');
         this.historyButton = document.getElementById('historyButton');
+        this.clearHistoryButton = document.getElementById('clearHistory');
         
         // History content lightbox elements
         this.historyContentLightbox = document.getElementById('historyContentLightbox');
         this.historyContentTitle = document.getElementById('historyContentTitle');
         this.historyContentText = document.getElementById('historyContentText');
         this.closeHistoryContentButton = document.getElementById('closeHistoryContent');
+
+        // End game confirm lightbox
+        this.endGameConfirmLightbox = document.getElementById('endGameConfirmLightbox');
+        this.confirmEndGameButton = document.getElementById('confirmEndGame');
+        this.cancelEndGameButton = document.getElementById('cancelEndGame');
+
+        // Shortcuts lightbox
+        this.shortcutsButton = document.getElementById('shortcutsHelp');
+        this.shortcutsLightbox = document.getElementById('shortcutsLightbox');
+        this.closeShortcutsButton = document.getElementById('closeShortcuts');
     }
 
     setupEventListeners() {
         this.startGameButton.addEventListener('click', () => this.startGame());
-        this.exitButton.addEventListener('click', () => this.endGame());
+        this.exitButton.addEventListener('click', () => this.showEndGameConfirm());
         this.nextRoundButton.addEventListener('click', () => this.showNextRound());
         this.copyResultsButton.addEventListener('click', () => this.copyResults());
         this.newGameButton.addEventListener('click', () => this.resetGame());
@@ -108,6 +125,60 @@ class DrawSystem {
             this.switchScreen('historyScreen');
         });
         this.closeHistoryContentButton.addEventListener('click', () => this.hideHistoryContent());
+        if (this.clearHistoryButton) {
+            this.clearHistoryButton.addEventListener('click', () => this.clearAllHistory());
+        }
+
+        // End game confirm events
+        if (this.confirmEndGameButton) {
+            this.confirmEndGameButton.addEventListener('click', () => {
+                this.hideEndGameConfirm();
+                this.endGame();
+            });
+        }
+        if (this.cancelEndGameButton) {
+            this.cancelEndGameButton.addEventListener('click', () => this.hideEndGameConfirm());
+        }
+
+        // Shortcuts events
+        if (this.shortcutsButton) {
+            this.shortcutsButton.addEventListener('click', () => {
+                if (this.shortcutsLightbox) this.shortcutsLightbox.classList.remove('hidden');
+            });
+        }
+        if (this.closeShortcutsButton) {
+            this.closeShortcutsButton.addEventListener('click', () => {
+                if (this.shortcutsLightbox) this.shortcutsLightbox.classList.add('hidden');
+            });
+        }
+
+        // Load example CSV button
+        if (this.loadExampleButton) {
+            this.loadExampleButton.addEventListener('click', async () => {
+                try {
+                    const ts = Date.now();
+                    const candidates = [
+                        `ex01.csv?v=${ts}`,
+                        `./ex01.csv?v=${ts}`,
+                        `/ex01.csv?v=${ts}`
+                    ];
+                    let loaded = null;
+                    for (const url of candidates) {
+                        try {
+                            const resp = await fetch(url, { cache: 'no-store' });
+                            if (resp.ok) { loaded = await resp.text(); break; }
+                        } catch {}
+                    }
+                    if (!loaded) throw new Error('Failed to load ex01.csv');
+                    const normalized = loaded.replace(/\r\n?/g, '\n').trim();
+                    this.presetInput.value = normalized;
+                    // Fire input event so any listeners see the change
+                    this.presetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                } catch (e) {
+                    alert('Could not load example CSV (ex01.csv). Please ensure the file exists next to index.html.');
+                }
+            });
+        }
 
         // 사운드 옵션 라디오 및 미리듣기 버튼 이벤트
         document.getElementById('flipSoundA').addEventListener('change', () => {
@@ -132,6 +203,38 @@ class DrawSystem {
             this.flipSoundB.currentTime = 0;
             this.flipSoundB.play();
         });
+
+        // Keyboard: ArrowUp to increase flip speed, ArrowDown to decrease
+        document.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+            // If lightbox is open and Enter is pressed, confirm adjustment (skip)
+            if (e.key === 'Enter' && this.cardAdjustLightbox && !this.cardAdjustLightbox.classList.contains('hidden')) {
+                e.preventDefault();
+                this.confirmCardAdjustment();
+                return;
+            }
+            if (tag === 'input' || tag === 'textarea' || tag === 'button') return;
+            if (e.key === 'ArrowUp') {
+                this.flipSpeedStep = Math.min(5, this.flipSpeedStep + 1);
+                this.updateCardsRemaining();
+            } else if (e.key === 'ArrowDown') {
+                this.flipSpeedStep = Math.max(1, this.flipSpeedStep - 1);
+                this.updateCardsRemaining();
+            } else if (e.key === 'Enter') {
+                // Do not start flips if the adjust lightbox is open
+                if (this.cardAdjustLightbox && !this.cardAdjustLightbox.classList.contains('hidden')) return;
+                // Do not start flips if Next Round is already enabled (all cards revealed)
+                if (this.nextRoundButton && this.nextRoundButton.disabled === false) return;
+                this.startCardFlips();
+            } else if (e.key === 'ArrowRight') {
+                // Proceed to next round with Right Arrow when available
+                if (this.cardAdjustLightbox && !this.cardAdjustLightbox.classList.contains('hidden')) return;
+                if (this.nextRoundButton && this.nextRoundButton.disabled === false && !this.isAnimating) {
+                    e.preventDefault();
+                    this.showNextRound();
+                }
+            }
+        });
     }
 
     switchScreen(screenId) {
@@ -139,16 +242,60 @@ class DrawSystem {
         document.getElementById(screenId).classList.add('active');
     }
 
-    generateUniqueNumbers(count) {
-        const numbers = new Set();
-        while (numbers.size < count) {
-            const num = Math.floor(Math.random() * this.maxNumber) + 1;
-            if (!this.usedNumbers.has(num)) {
-                numbers.add(num);
+    // Parse range input like "1-442, 501-872, 900, 905-910" into a sorted unique array
+    parseNumberRanges(input) {
+        const parts = input.split(',').map(p => p.trim()).filter(Boolean);
+        const nums = new Set();
+        for (const part of parts) {
+            if (/^\d+$/.test(part)) {
+                const n = parseInt(part, 10);
+                if (n >= 1 && n <= this.maxLimit) nums.add(n);
+                continue;
+            }
+            const m = part.match(/^(\d+)\s*-\s*(\d+)$/);
+            if (m) {
+                let a = parseInt(m[1], 10);
+                let b = parseInt(m[2], 10);
+                if (a > b) [a, b] = [b, a];
+                a = Math.max(1, a);
+                b = Math.min(this.maxLimit, b);
+                for (let x = a; x <= b; x++) nums.add(x);
             }
         }
-        const result = Array.from(numbers);
-        result.forEach(num => this.usedNumbers.add(num));
+        return Array.from(nums).sort((a, b) => a - b);
+    }
+
+    // Build pool from input, return true if valid, else alert and return false
+    buildPoolFromInput() {
+        const raw = (this.numberRangesInput?.value || '').trim();
+        const pool = this.parseNumberRanges(raw);
+        if (pool.length === 0) {
+            alert('Please enter a valid draw range, e.g., 1-500 or 1-442, 501-872');
+            return false;
+        }
+        if (pool.length > this.maxLimit) {
+            alert(`The total count of numbers in the range cannot exceed ${this.maxLimit}.`);
+            return false;
+        }
+        this.numberPool = pool;
+        return true;
+    }
+
+    generateUniqueNumbers(count) {
+        const available = this.numberPool.filter(n => !this.reservedNumbers.has(n));
+        if (count > available.length) return [];
+        const result = [];
+        // Sample without replacement from available
+        for (let i = 0; i < count; i++) {
+            const idx = Math.floor(Math.random() * available.length);
+            const chosen = available[idx];
+            result.push(chosen);
+            // remove chosen from available
+            available[idx] = available[available.length - 1];
+            available.pop();
+            // reserve immediately to prevent reuse across rounds
+            this.reservedNumbers.add(chosen);
+        }
         return result;
     }
 
@@ -166,11 +313,26 @@ class DrawSystem {
             `;
             this.cardContainer.appendChild(card);
         }
-        this.updateCardsRemaining(count);
+        this.updateCardsRemaining();
     }
 
-    updateCardsRemaining(count) {
-        this.cardsRemainingDisplay.textContent = `Remaining Cards: ${count}`;
+    updateCardsRemaining() {
+        const total = this.numberPool.length || 0;
+        const winners = this.usedNumbers.size || 0;
+        const speedPercent = Math.max(1, Math.min(5, this.flipSpeedStep)) * 20;
+        this.cardsRemainingDisplay.textContent = `🏆 ${winners} / ${total} ( ⚡${speedPercent}%)`;
+    }
+
+    getFlipTimings() {
+        // Steps: 1 slowest ... 5 fastest
+        const map = {
+            1: { delay: 800, duration: 700 },
+            2: { delay: 650, duration: 650 },
+            3: { delay: 500, duration: 600 },
+            4: { delay: 350, duration: 500 },
+            5: { delay: 200, duration: 450 }
+        };
+        return map[this.flipSpeedStep] || map[3];
     }
 
     // Function to play flip sound with reset and pause fix
@@ -183,7 +345,7 @@ class DrawSystem {
             this.flipSoundB.pause();
             this.flipSoundB.currentTime = 0;
             this.flipSoundB.play();
-        } // 무음이면 아무것도 하지 않음
+        } // 
     }
 
     async flipCard(index) {
@@ -197,25 +359,29 @@ class DrawSystem {
         // Play flip sound using the improved method
         this.playFlipSound();
         
+        const timings = this.getFlipTimings();
         await anime({
             targets: card,
             scale: [1, 1.1, 1],
-            duration: 600,
+            duration: timings.duration,
             easing: 'easeOutElastic(1, .8)'
         }).finished;
-
-        // Update remaining cards count
-        const remainingCards = this.currentRoundNumbers.length - (index + 1);
-        this.updateCardsRemaining(remainingCards);
+        // Mark revealed number as used and update status
+        const revealed = this.currentRoundNumbers[index];
+        if (!this.usedNumbers.has(revealed)) {
+            this.usedNumbers.add(revealed);
+        }
+        this.updateCardsRemaining();
     }
 
     async revealCards() {
         this.isAnimating = true;
         for (let i = 0; i < this.currentRoundNumbers.length; i++) {
             await this.flipCard(i);
-            await new Promise(resolve => setTimeout(resolve, 500));
+            const { delay } = this.getFlipTimings();
+            await new Promise(resolve => setTimeout(resolve, delay));
             
-            // 마지막 카드인 경우 confetti 효과 실행
+            // 
             if (i === this.currentRoundNumbers.length - 1) {
                 this.triggerConfetti();
             }
@@ -242,14 +408,14 @@ class DrawSystem {
 
             const particleCount = 50 * (timeLeft / duration);
             
-            // 왼쪽에서 발사
+            // 
             confetti({
                 ...defaults,
                 particleCount,
                 origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
             });
             
-            // 오른쪽에서 발사
+            // 
             confetti({
                 ...defaults,
                 particleCount,
@@ -259,8 +425,7 @@ class DrawSystem {
     }
 
     startGame() {
-        this.maxNumber = parseInt(this.maxNumberInput.value) || 1000;
-        this.maxNumber = Math.min(Math.max(this.maxNumber, 1), 1000);
+        if (!this.buildPoolFromInput()) return;
         
         const presetValues = this.presetInput.value.trim();
         if (!presetValues) {
@@ -274,32 +439,51 @@ class DrawSystem {
             return;
         }
 
-        this.prizes = [];
         this.rounds = [];
         
-        for (const line of lines) {
-            const [prize, count] = line.split(',').map(item => item.trim());
-            const numberCount = parseInt(count);
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            const parts = line.split(',').map(s => s.trim()).filter(Boolean);
+            if (parts.length < 2) {
+                alert('Each line must contain at least a prize and a count.');
+                return;
+            }
+            // Find last numeric token as count
+            let countIndex = -1;
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (/^\d+$/.test(parts[i])) { countIndex = i; break; }
+            }
+            if (countIndex === -1) {
+                alert('Each line must end with a numeric draw count.');
+                return;
+            }
+            const numberCount = parseInt(parts[countIndex], 10);
+            const prize = parts.slice(0, countIndex).join(', ').trim();
             
-            if (!prize || isNaN(numberCount) || numberCount <= 0 || numberCount > this.maxNumber) {
+            if (!prize || isNaN(numberCount) || numberCount <= 0 || numberCount > this.numberPool.length) {
                 alert('Please enter the correct format (Product Name, Draw Count).');
                 return;
             }
             
-            this.prizes.push(prize);
             this.rounds.push(numberCount);
+            this.prizes.push(prize);
         }
         
         const firstRoundCount = this.rounds[0];
         
-        // Ensure card count doesn't exceed max number
-        if (firstRoundCount > this.maxNumber) {
-            alert(`The draw count cannot exceed the maximum number (${this.maxNumber}).`);
+        // Ensure card count doesn't exceed available pool
+        if (firstRoundCount > this.numberPool.length) {
+            alert(`The draw count cannot exceed the available numbers (${this.numberPool.length}).`);
             return;
         }
         
         this.currentRoundNumbers = this.generateUniqueNumbers(firstRoundCount);
+        if (this.currentRoundNumbers.length !== firstRoundCount) {
+            alert('Failed to generate unique numbers for the first round. Please check the range and counts.');
+            return;
+        }
         this.createCards(firstRoundCount);
+        this.updateCardsRemaining();
         this.roundResults.push({
             round: this.currentRound,
             prize: this.prizes[0],
@@ -310,6 +494,8 @@ class DrawSystem {
         this.currentRoundDisplay.textContent = `${this.currentRound}`;
         document.getElementById('currentPrizeDisplay').textContent = this.prizes[0];
         this.nextRoundButton.disabled = true;
+        // Show adjust lightbox for the first item
+        this.showLightbox();
     }
 
     showNextRound() {
@@ -326,7 +512,7 @@ class DrawSystem {
         const currentPrize = this.prizes[this.currentRound - 1];
         
         // Check if we have enough numbers left
-        const remainingPossibleNumbers = this.maxNumber - this.usedNumbers.size;
+        const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size;
         if (nextRoundCount > remainingPossibleNumbers) {
             alert(`Not enough numbers remaining. Only ${remainingPossibleNumbers} numbers are available.`);
             return;
@@ -334,6 +520,7 @@ class DrawSystem {
         
         this.currentRoundNumbers = this.generateUniqueNumbers(nextRoundCount);
         this.createCards(nextRoundCount);
+        this.updateCardsRemaining();
         this.roundResults.push({
             round: this.currentRound,
             prize: currentPrize,
@@ -351,7 +538,12 @@ class DrawSystem {
         this.adjustCardCountInput.value = this.currentRoundNumbers.length;
         // Set current prize name
         const currentPrize = this.prizes[this.currentRound - 1];
-        document.getElementById('currentPrizeName').textContent = currentPrize;
+        const prizeTitleEl = document.getElementById('currentPrizeName');
+        const lightboxContent = this.cardAdjustLightbox.querySelector('.lightbox-content');
+        prizeTitleEl.textContent = currentPrize;
+        // Dynamically constrain max selectable cards to remaining pool size
+        const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size + this.currentRoundNumbers.length;
+        this.adjustCardCountInput.setAttribute('max', String(Math.min(this.maxLimit, remainingPossibleNumbers)));
     }
 
     hideLightbox() {
@@ -360,23 +552,26 @@ class DrawSystem {
 
     confirmCardAdjustment() {
         const newCount = parseInt(this.adjustCardCountInput.value);
-        if (isNaN(newCount) || newCount < 1 || newCount > this.maxNumber) {
-            alert(`Please enter a valid number between 1 and ${this.maxNumber}`);
+        if (isNaN(newCount) || newCount < 1 || newCount > this.numberPool.length) {
+            alert(`Please enter a valid number between 1 and ${this.numberPool.length}`);
             return;
         }
 
-        const remainingPossibleNumbers = this.maxNumber - this.usedNumbers.size + this.currentRoundNumbers.length;
+        const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size + this.currentRoundNumbers.length;
         if (newCount > remainingPossibleNumbers) {
             alert(`Not enough unique numbers remaining. Only ${remainingPossibleNumbers} numbers available.`);
             return;
         }
 
-        // Remove current round numbers from usedNumbers set
-        this.currentRoundNumbers.forEach(num => this.usedNumbers.delete(num));
+        // Unreserve current round numbers before regenerating (only those not already revealed)
+        this.currentRoundNumbers.forEach(num => {
+            if (!this.usedNumbers.has(num)) this.reservedNumbers.delete(num);
+        });
         
         // Generate new numbers for the round
         this.currentRoundNumbers = this.generateUniqueNumbers(newCount);
         this.createCards(newCount);
+        this.updateCardsRemaining();
         
         // Update the last round result
         this.roundResults[this.roundResults.length - 1].numbers = [...this.currentRoundNumbers];
@@ -438,8 +633,10 @@ class DrawSystem {
         this.rounds = [];
         this.currentRound = 1;
         this.usedNumbers.clear();
+        this.reservedNumbers.clear();
         this.currentRoundNumbers = [];
         this.roundResults = [];
+        this.prizeImages = [];
         
         // Set default preset values
         const defaultPreset = `Amazon Kindle Paperwhite,6
@@ -449,8 +646,8 @@ PlayStation 5 Digital Edition,2
 Apple iPad Pro 12.9-inch,1`;
         
         this.presetInput.value = defaultPreset;
-        this.maxNumberInput.value = '500';
-        this.maxNumber = 1000;
+        if (this.numberRangesInput) this.numberRangesInput.value = '1-500';
+        this.numberPool = [];
         this.titleInput.value = 'Lucky Number Draw';
         this.titleElement.textContent = 'Lucky Number Draw';
         this.switchScreen('startScreen');
@@ -463,6 +660,14 @@ Apple iPad Pro 12.9-inch,1`;
         document.getElementById('flipSoundA').checked = (opt === 'a');
         document.getElementById('flipSoundB').checked = (opt === 'b');
         document.getElementById('flipSoundNone').checked = (opt === 'none');
+        // Update range label with current maxLimit
+        const rangeInput = document.getElementById('numberRanges');
+        if (rangeInput && rangeInput.parentElement) {
+            const labelEl = rangeInput.parentElement.querySelector('label');
+            if (labelEl) {
+                labelEl.textContent = `Draw Range (e.g., 1-442, 501-872) — Max total ${this.maxLimit} numbers`;
+            }
+        }
     }
 
     hideSettings() {
@@ -470,8 +675,10 @@ Apple iPad Pro 12.9-inch,1`;
     }
 
     saveSettings() {
-        const maxNumber = parseInt(this.maxNumberInput.value) || 1000;
-        this.maxNumber = Math.min(Math.max(maxNumber, 1), 1000);
+        // Try to build pool to validate input; keep previous if invalid
+        if (!this.buildPoolFromInput()) {
+            return;
+        }
         
         // Update title
         const newTitle = this.titleInput.value.trim() || 'Lucky Number Draw';
@@ -578,6 +785,21 @@ Apple iPad Pro 12.9-inch,1`;
 
     hideHistoryContent() {
         this.historyContentLightbox.classList.add('hidden');
+    }
+
+    showEndGameConfirm() {
+        this.endGameConfirmLightbox.classList.remove('hidden');
+    }
+
+    hideEndGameConfirm() {
+        this.endGameConfirmLightbox.classList.add('hidden');
+    }
+
+    clearAllHistory() {
+        if (!confirm('Delete ALL history items? This cannot be undone.')) return;
+        localStorage.removeItem('drawHistory');
+        this.loadHistory();
+        alert('All history cleared.');
     }
 }
 
