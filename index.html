@@ -18,7 +18,7 @@
                 <div class="button-group">
                     <button id="startGameButton" class="main-button">🚀Start Game</button>
                     <button id="settingsButton" class="control-button">⚙️Settings</button>
-                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: Start flips (when available)\nEnter (Lightbox): Confirm\n↑/↓: Increase/Decrease flip speed\n→: Next Round (when available)">❔Shortcuts</button>
+                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: Start flips (when available)\nEnter (Lightbox): Confirm\n↑/↓: Increase/Decrease flip speed\n→: Next Round (when available)">❔</button>
                     <button id="historyButton" class="control-button">📜</button>
                 </div>
             </div>
@@ -57,6 +57,9 @@ Apple iPad Pro 12.9-inch,1</textarea>
                             <label><input type="radio" name="flipSoundOption" id="flipSoundNone" value="none"> Silent</label>
                         </div>
                     </div>
+                    <div class="input-group">
+                        <button id="remoteButton" class="control-button">📱 Remote Controller</button>
+                    </div>
                     <div class="button-group">
                         <button id="saveSettings" class="main-button">Save</button>
                         <button id="closeSettings" class="control-button">Close</button>
@@ -78,6 +81,7 @@ Apple iPad Pro 12.9-inch,1</textarea>
             <div class="card-container"></div>
 
             <div class="footer">
+                <div class="connection-status" id="connectionStatus">Disconnected</div>
                 <div class="card-count"><span id="cardsRemaining">0</span></div>
                 <button id="nextRoundButton" class="control-button">Next Round</button>
             </div>
@@ -159,6 +163,11 @@ Enter (Lightbox): Confirm
    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Firebase SDK for remote controller -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <!-- Load Firebase Configuration (create this file with your own values) -->
+    <script src="firebaseConfig.js"></script>
     <script src="script.js"></script>
 </body>
 

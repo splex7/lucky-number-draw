@@ -259,6 +259,20 @@ h2, h3 {
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
+.connection-status {
+    font-size: 0.9em;
+    color: #f44336; /* Default to red (disconnected) */
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    margin-right: auto; /* Align to the left */
+    margin-left: 1rem; /* Add some left margin */
+}
+
+.connection-status.connected {
+    color: #4CAF50; /* Green when connected */
+}
+
 
 .lightbox {
     position: fixed;

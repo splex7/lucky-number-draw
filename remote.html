@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Controller</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .remote-button {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #ff3333, #b30000);
+            color: white;
+            font-size: 2.5em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            outline: none;
+        }
+
+        .remote-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(255, 0, 0, 0.4);
+        }
+
+        .remote-button:active {
+            transform: scale(0.98);
+        }
+
+        .remote-button:after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+
+        .remote-button:active:after {
+            transform: rotate(30deg) translate(200%, 200%);
+        }
+
+        .shining {
+            animation: shine 1s infinite;
+        }
+
+        @keyframes shine {
+            0% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.8); }
+            100% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.5); }
+        }
+
+        .connection-status {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #ccc;
+        }
+
+        .connected {
+            color: #4CAF50;
+        }
+
+        .disconnected {
+            color: #f44336;
+        }
+
+        .config-instruction {
+            color: #ffcc00;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Remote Controller</h1>
+        
+        <div class="config-instruction">
+            <p><strong>Press Button</strong></p>
+        </div>
+        
+        <button id="startFlipButton" class="remote-button shining">GO</button>
+        
+        <div id="connectionStatus" class="connection-status disconnected">Disconnected</div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    
+    <!-- Load Firebase Configuration -->
+    <script src="firebaseConfig.js"></script>
+    
+    <script>
+        // Initialize Firebase app
+        firebase.initializeApp(firebaseConfig);
+        
+        // Get a reference to the database service
+        const database = firebase.database();
+        
+        // Reference to the remote commands in the database
+        let remoteRef = null;
+        let connectionStatusElement = null;
+        
+        // Connection status management
+        let connectedRef = null;
+        
+        // Initialize the remote controller
+        function initRemoteController() {
+            connectionStatusElement = document.getElementById('connectionStatus');
+            
+            // Connect to Firebase Realtime Database
+            remoteRef = database.ref('remoteCommands');
+            
+            // Listen for connection status
+            connectedRef = database.ref('.info/connected');
+            connectedRef.on('value', (snap) => {
+                if (snap.val() === true) {
+                    connectionStatusElement.textContent = 'Connected';
+                    connectionStatusElement.className = 'connection-status connected';
+                } else {
+                    connectionStatusElement.textContent = 'Disconnected';
+                    connectionStatusElement.className = 'connection-status disconnected';
+                }
+            });
+            
+            // Add visual effect when button is clicked
+            const button = document.getElementById('startFlipButton');
+            button.addEventListener('click', () => {
+                // Add visual feedback
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 100);
+                
+                sendCommand('startFlip');
+            });
+        }
+        
+        // Function to send command to Firebase
+        function sendCommand(command) {
+            if (remoteRef) {
+                remoteRef.push({
+                    command: command,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    console.log('Command sent:', command);
+                }).catch((error) => {
+                    console.error('Error sending command:', error);
+                    alert('Failed to send command. Please check your connection.');
+                });
+            } else {
+                alert('Remote controller not initialized. Please reload the page.');
+            }
+        }
+        
+        // Initialize when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initRemoteController();
+        });
+    </script>
+</body>
+</html>
