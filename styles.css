@@ -265,7 +265,6 @@ h2, h3 {
     padding: 5px 10px;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.5);
-    margin-right: auto; /* Align to the left */
     margin-left: 1rem; /* Add some left margin */
 }
 
@@ -567,4 +566,10 @@ h2, h3 {
     .history-content {
         font-size: 0.9em;
     }
+}
+
+/* Success state for buttons */
+.success {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32) !important;
+    color: white !important;
 }

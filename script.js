@@ -200,6 +200,39 @@ class DrawSystem {
                     this.presetInput.value = normalized;
                     // Fire input event so any listeners see the change
                     this.presetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // Provide visual feedback that example data was loaded
+                    const originalText = this.loadExampleButton.textContent;
+                    this.loadExampleButton.textContent = 'Loaded!';
+                    this.loadExampleButton.classList.add('success');
+                    
+                    // Highlight the textarea to make it clear that content was loaded
+                    this.presetInput.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Light green
+                    // Scroll to the textarea to make it visible
+                    this.presetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Add a temporary message to indicate that the data is ready to use
+                    const presetLabel = this.presetInput.previousElementSibling || 
+                                      (this.presetInput.parentElement.querySelector('label') ? 
+                                       this.presetInput.parentElement.querySelector('label') : 
+                                       null);
+                                       
+                    if (presetLabel) {
+                        const originalLabelText = presetLabel.innerHTML;
+                        presetLabel.innerHTML = 'Prize Name, Draw Count <span style="color: #4CAF50; font-size: 0.9em;">(Example data loaded - ready to start game)</span>';
+                        setTimeout(() => {
+                            presetLabel.innerHTML = originalLabelText;
+                        }, 5000); // Show for 5 seconds
+                    }
+                    
+                    setTimeout(() => {
+                        this.presetInput.style.backgroundColor = ''; // Reset to default
+                    }, 2000);
+                    
+                    setTimeout(() => {
+                        this.loadExampleButton.textContent = originalText;
+                        this.loadExampleButton.classList.remove('success');
+                    }, 2000);
                 } catch (e) {
                     alert('Could not load example CSV (ex01.csv). Please ensure the file exists next to index.html.');
                 }
@@ -292,6 +325,11 @@ class DrawSystem {
             numberPool: this.numberPool,
             flipSpeedStep: this.flipSpeedStep,
             
+            // Form input values
+            presetInputValue: this.presetInput ? this.presetInput.value : '',
+            numberRangesInputValue: this.numberRangesInput ? this.numberRangesInput.value : '',
+            titleInputValue: this.titleInput ? this.titleInput.value : '',
+            
             // UI state
             isAnimating: this.isAnimating,
             
@@ -327,7 +365,19 @@ class DrawSystem {
             this.flipSpeedStep = state.flipSpeedStep || 3;
             this.isAnimating = state.isAnimating || false;
             
-            // If we have game state, restore the UI
+            // Restore form input values if they exist in the saved state
+            if (state.presetInputValue !== undefined && this.presetInput) {
+                this.presetInput.value = state.presetInputValue;
+            }
+            if (state.numberRangesInputValue !== undefined && this.numberRangesInput) {
+                this.numberRangesInput.value = state.numberRangesInputValue;
+            }
+            if (state.titleInputValue !== undefined && this.titleInput) {
+                this.titleInput.value = state.titleInputValue;
+                this.titleElement.textContent = state.titleInputValue;
+            }
+            
+            // If we have game state with rounds, restore the UI to game screen
             if (this.rounds.length > 0) {
                 // Switch to the appropriate screen
                 if (state.activeScreen) {
@@ -386,6 +436,13 @@ class DrawSystem {
                 }
                 
                 console.log('Game state restored');
+                return true;
+            } 
+            // If there's no active game but form data was saved, still restore the form values
+            else if (state.activeScreen && state.activeScreen !== 'gameScreen') {
+                // Switch to the saved screen
+                this.switchScreen(state.activeScreen);
+                console.log('Form state restored');
                 return true;
             }
         } catch (error) {
