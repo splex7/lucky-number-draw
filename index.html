@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>행운의 번호 추첨 시스템</title>
+    <title>경품 추첨 시스템</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -12,33 +12,34 @@
     <div class="main-container">
         <!-- Start Screen -->
         <div id="startScreen" class="screen active">
-            <h1>행운의 번호 추첨</h1>
-          
+            <h1 class="main-title">일심청백전 경품 추첨</h1>
+
             <div class="setup-container">
                 <div class="button-group">
-                    <button id="startGameButton" class="main-button">🚀게임 시작</button>
-                    <button id="settingsButton" class="control-button">⚙️</button>
-                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: 카드 뒤집기 시작 (가능한 경우)\nEnter (팝업): 확인\n↑/↓: 뒤집기 속도 증가/감소\n→: 다음 라운드 (가능한 경우)">❔</button>
-                    <button id="historyButton" class="control-button">📜</button>
+                    <button id="startGameButton" class="main-button">시작하기</button>
+                    <button id="settingsButton" class="control-button">⚙️게임 설정</button>
+                    <button id="shortcutsHelp" class="control-button">❔사용 방법</button>
+                    <button id="historyButton" class="control-button">📜게임 기록</button>
+                    <button id="remoteButton" class="control-button">📱원격 버튼</button>
                 </div>
             </div>
 
             <!-- Settings Modal -->
             <div id="settingsModal" class="modal hidden">
                 <div class="modal-content">
-                    <h2>Settings</h2>
                     <div class="input-group">
                         <label>Title (Customize with Your Desired Title) </label>
-                        <input type="text" id="titleInput" value="행운의 번호 추첨" class="title-input">
+                        <input type="text" id="titleInput" value="일심청백전 경품추첨" class="title-input">
                     </div>
                     <div class="input-group">
                         <label>Draw Range (e.g., 1-442, 501-872) — Max total 2000 numbers</label>
-                        <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872" value="1-250, 501-750">
+                        <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872"
+                            value="1-250, 501-750">
                     </div>
                     <div class="input-group">
                         <label>Prize Name, Draw Count (2-column CSV):</label>
                         <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count"
-                        style="width: 100%; font-family: monospace;">Amazon Kindle Paperwhite,6
+                            style="width: 100%; font-family: monospace;">Amazon Kindle Paperwhite,6
 Sony WH-1000XM5 Wireless Headphones,5
 Apple Watch Series 9,4
 PlayStation 5 Digital Edition,2
@@ -50,16 +51,17 @@ Apple iPad Pro 12.9-inch,1</textarea>
                     <div class="input-group">
                         <label>Flip Sound Effect</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <label><input type="radio" name="flipSoundOption" id="flipSoundA" value="a"> <button type="button" id="previewSoundA" style="margin-right: 10px;">Beep</button></label>
-                            
-                            <label><input type="radio" name="flipSoundOption" id="flipSoundB" value="b"> <button type="button" id="previewSoundB" style="margin-right: 10px;">Flip</button></label>
-                            
-                            <label><input type="radio" name="flipSoundOption" id="flipSoundNone" value="none"> Silent</label>
+                            <label><input type="radio" name="flipSoundOption" id="flipSoundA" value="a"> <button
+                                    type="button" id="previewSoundA" style="margin-right: 10px;">Beep</button></label>
+
+                            <label><input type="radio" name="flipSoundOption" id="flipSoundB" value="b"> <button
+                                    type="button" id="previewSoundB" style="margin-right: 10px;">Flip</button></label>
+
+                            <label><input type="radio" name="flipSoundOption" id="flipSoundNone" value="none">
+                                Silent</label>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <button id="remoteButton" class="control-button">📱 Remote Controller</button>
-                    </div>
+
                     <div class="button-group">
                         <button id="saveSettings" class="main-button">Save</button>
                         <button id="closeSettings" class="control-button">Close</button>
@@ -67,7 +69,7 @@ Apple iPad Pro 12.9-inch,1</textarea>
                 </div>
             </div>
 
-            
+
         </div>
 
         <!-- Game Screen -->
@@ -107,8 +109,8 @@ Apple iPad Pro 12.9-inch,1</textarea>
             <h1>Game Results</h1>
             <div id="resultsContent" class="results-container"></div>
             <div class="button-group">
-                <button id="copyResults" class="control-button">Copy Results</button>
-                <button id="newGame" class="main-button">New Game</button>
+                <button id="copyResults" class="control-button">결과 복사하기</button>
+                <button id="newGame" class="main-button">메인화면으로</button>
             </div>
         </div>
 
@@ -149,10 +151,9 @@ Apple iPad Pro 12.9-inch,1</textarea>
             <div class="lightbox-content">
                 <h3>Keyboard Shortcuts</h3>
                 <div class="history-content" style="white-space: pre-wrap;">
-Enter: Start flips (when available)
-Enter (Lightbox): Confirm
-↑/↓: Increase/Decrease flip speed
-→: Next Round (when available)
+                    <p>Enter: 뒤집기 시작</p>
+                    <p>방향키 ↑/↓: 카드 뒤집는 속도 조절</p>
+                    <p>방향키 →: 다음라운드로 이동</p>
                 </div>
                 <div class="button-group">
                     <button id="closeShortcuts" class="control-button">Close</button>
@@ -160,7 +161,7 @@ Enter (Lightbox): Confirm
             </div>
         </div>
     </div>
-   
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Firebase SDK for remote controller -->

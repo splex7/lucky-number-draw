@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&family=Press+Start+2P&display=swap" rel="stylesheet">
     <title>Remote Controller</title>
+
     <style>
         body {
             margin: 0;
@@ -16,12 +17,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #1a1a1a;
+            background: #111;
             user-select: none;
             font-family: "Press Start 2P";
-            font-weight: 400;
-            font-style: normal;
-
         }
 
         .container {
@@ -37,60 +35,63 @@
             font-size: 2em;
         }
 
-        .video-game-button {
-            text-shadow: 1px 1px pink, -1px -1px maroon;
-             font-family: "Press Start 2P";
-            line-height: 1.5em;
-            text-align: center;
-            display: inline-block;
-            width: 50vw;
-            height: 50vw;
-            max-width: 300px;
-            max-height: 300px;
-            -webkit-border-radius: 50%;
-            -moz-border-radius: 50%;
-            -o-border-radius: 50%;
+        /* === 3D 스타일 버튼 === */
+        #startFlipButton {
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            background-color: red;
-            -webkit-box-shadow: 0 .2em maroon;
-            -moz-box-shadow: 0 .2em maroon;
-            -o-box-shadow: 0 .2em maroon;
-            box-shadow: 0 .2em maroon;
-            color: white;
-            margin: 8px;
-            background-color: red;
-            background-image: -o-linear-gradient(left top, pink 3%, red 22%, maroon 99%);
-            background-image: -moz-linear-gradient(left top, pink 3%, red 22%, maroon 99%);
-            background-image: -webkit-linear-gradient(left top, pink 3%, red 22%, maroon 99%);
-            background-image: linear-gradient(left top, pink 3%, red 22%, maroon 99%);
+            background: radial-gradient(circle at 30% 30%, #ff4d4d, #b30000 70%);
+            border: none;
+            box-shadow:
+                inset 0 4px 8px rgba(255, 255, 255, 0.3),
+                inset 0 -6px 8px rgba(0, 0, 0, 0.5),
+                0 8px 16px rgba(0, 0, 0, 0.8);
+            color: #ddd;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 28px;
+            text-shadow: 2px 2px 0 #000;
             cursor: pointer;
-            padding: 0;
-            font-size: 5em;
-        }
-
-        .start-btn {
-            text-align: center;
-            display: inline-block;
-            margin: 5px;
-            font-weight: bold;
-            padding: 10px 0 10px 10px;
-            background-color: lightgray;
-            text-shadow: -1px -1px black, 1px 1px white;
-            color: gray;
-            -webkit-border-radius: 7px;
-            -moz-border-radius: 7px;
-            -o-border-radius: 7px;
-            border-radius: 7px;
-            box-shadow: 0 .2em gray;
-            cursor: pointer;
-
-        }
-
-        .video-game-button:active,
-        .start-btn:active {
-            box-shadow: none;
+            transition: transform 0.1s ease-in, box-shadow 0.2s ease-in;
             position: relative;
-            top: .2em;
+            overflow: hidden;
+        }
+
+        #startFlipButton::before {
+            content: "";
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 70%;
+            height: 40%;
+            background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 70%);
+            border-radius: 50%;
+            filter: blur(6px);
+            pointer-events: none;
+            transition: all 0.15s ease-out;
+        }
+
+        /* 버튼 눌릴 때 반사광 확대 */
+        #startFlipButton:active::before {
+            top: 8%;
+            left: 10%;
+            width: 80%;
+            height: 50%;
+            filter: blur(8px);
+            opacity: 0.9;
+        }
+
+
+        #startFlipButton:active {
+            transform: scale(0.96);
+            box-shadow:
+                inset 0 4px 8px rgba(0, 0, 0, 0.7),
+                0 3px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        #startFlipButton.glow-effect {
+            box-shadow:
+                0 0 25px rgba(255, 0, 0, 0.8),
+                0 0 50px rgba(255, 0, 0, 0.4);
         }
 
         .mystical-particle {
@@ -101,35 +102,23 @@
             z-index: 1000;
         }
 
-        .ripple {
-            position: fixed;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 0, 0, 0.5) 0%, rgba(255, 0, 0, 0) 70%);
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 999;
-        }
-
         .connection-status {
-            margin-top: 20px;
+            margin-top: 2em;
             font-size: 1em;
             color: #999;
-            /* Gray for disconnected */
         }
 
         .connection-status.connected {
             color: #4CAF50;
-            /* Green for connected */
         }
+
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1>Remote Controller</h1>
-
-        <button id="startFlipButton" class="video-game-button">GO</button>
-
+        <button id="startFlipButton">GO</button>
         <div id="connectionStatus" class="connection-status disconnected">Disconnected</div>
     </div>
 
@@ -141,28 +130,16 @@
     <script src="firebaseConfig.js"></script>
 
     <script>
-        // Initialize Firebase app
         firebase.initializeApp(firebaseConfig);
-
-        // Get a reference to the database service
         const database = firebase.database();
-
-        // Reference to the remote commands in the database
         let remoteRef = null;
         let connectionStatusElement = null;
 
-        // Connection status management
-        let connectedRef = null;
-
-        // Initialize the remote controller
         function initRemoteController() {
             connectionStatusElement = document.getElementById('connectionStatus');
-
-            // Connect to Firebase Realtime Database
             remoteRef = database.ref('remoteCommands');
 
-            // Listen for connection status
-            connectedRef = database.ref('.info/connected');
+            const connectedRef = database.ref('.info/connected');
             connectedRef.on('value', (snap) => {
                 if (snap.val() === true) {
                     connectionStatusElement.textContent = 'Connected';
@@ -173,169 +150,105 @@
                 }
             });
 
-            // Add visual effect when button is clicked
             const button = document.getElementById('startFlipButton');
-            const container = document.querySelector('.container');
+            let isClickable = true;
 
-            button.addEventListener('click', (e) => {
-                // Create ripple effect from touch point
-                createRippleEffect(e);
+            button.addEventListener('mousedown', (e) => {
+                if (!isClickable) return;
+                isClickable = false;
 
-                // Add visual feedback
-                button.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    button.style.transform = 'scale(1)';
-                }, 100);
+              
 
-                // Add 5-second glow effect
+                // 눌림 효과
                 button.classList.add('glow-effect');
-                setTimeout(() => {
-                    button.classList.remove('glow-effect');
-                }, 5000);
+                setTimeout(() => button.classList.remove('glow-effect'), 2000);
 
-                // Create mystical glowing particles
+                // 입자 효과
                 createMysticalParticles(e);
 
+                // 명령 전송
                 sendCommand('startFlip');
+                playRemoteButtonSound();
+
+                setTimeout(() => {
+                    isClickable = true;
+                }, 1000);
             });
 
-            // Function to create mystical glowing particles
+            function playRemoteButtonSound() {
+                const sound = new Audio('button.mp3');
+                sound.play();
+            }
+
             function createMysticalParticles(e) {
-                const button = document.getElementById('startFlipButton');
                 const rect = button.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
 
-                // Create 30 mystical glowing particles with wider spread
                 for (let i = 0; i < 30; i++) {
                     const particle = document.createElement('div');
                     particle.className = 'mystical-particle';
 
-                    // Random size between 6px and 16px
                     const size = Math.random() * 5 + 3;
                     particle.style.width = `${size}px`;
                     particle.style.height = `${size}px`;
-
-                    // White color for all particles
                     particle.style.backgroundColor = '#FFFFFF';
-
-                    // Add subtle glowing effect using box-shadow
                     particle.style.boxShadow = `0 0 ${size}px ${size / 2}px #FFFFFF40`;
-
-                    // Position at button center initially
                     particle.style.left = `${centerX}px`;
                     particle.style.top = `${centerY}px`;
 
-                    // Random direction and wider distance
                     const angle = Math.random() * Math.PI * 2;
-                    const distance = Math.random() * 300 + 100; // 100px to 400px (much wider range)
+                    const distance = Math.random() * 300 + 100;
                     const targetX = centerX + Math.cos(angle) * distance;
                     const targetY = centerY + Math.sin(angle) * distance;
 
-                    // Add to document
                     document.body.appendChild(particle);
-
-                    // Animate the mystical particle
                     animateMysticalParticle(particle, targetX, targetY, size);
                 }
             }
 
-            // Function to animate mystical particle movement
             function animateMysticalParticle(particle, targetX, targetY, size) {
+                const startX = parseFloat(particle.style.left);
+                const startY = parseFloat(particle.style.top);
                 const startTime = performance.now();
-                const duration = Math.random() * 2000 + 1500; // 1500ms to 3500ms - slower movement
+                const duration = Math.random() * 1500 + 1800;
+                const curveStrength = (Math.random() - 0.5) * 80;
+                const verticalLift = Math.random() * 40;
 
                 function updateParticle(timestamp) {
                     const elapsed = timestamp - startTime;
                     const progress = Math.min(elapsed / duration, 1);
+                    const ease = 1 - Math.pow(1 - progress, 3);
 
-                    // Adjusted easing for more natural movement (less pronounced than cubic)
-                    const ease = 1 - Math.pow(1 - progress, 2);
-
-                    // Calculate new position
-                    const currentX = parseFloat(particle.style.left) + (targetX - parseFloat(particle.style.left)) * ease;
-                    const currentY = parseFloat(particle.style.top) + (targetY - parseFloat(particle.style.top)) * ease;
+                    const midX = (startX + targetX) / 2 + curveStrength;
+                    const midY = (startY + targetY) / 2 - verticalLift;
+                    const currentX = Math.pow(1 - ease, 2) * startX +
+                        2 * (1 - ease) * ease * midX +
+                        Math.pow(ease, 2) * targetX;
+                    const currentY = Math.pow(1 - ease, 2) * startY +
+                        2 * (1 - ease) * ease * midY +
+                        Math.pow(ease, 2) * targetY;
 
                     particle.style.left = `${currentX}px`;
                     particle.style.top = `${currentY}px`;
-
-                    // Fade out gradually during the entire movement
-                    // make opacity quickly 1 to 0 
-                    const opacity = 1 - (progress * 3);
-                    particle.style.opacity = opacity;
-
-                    // Scale down as it moves
-                    const scale = 1 - (progress * 0.3); // Less scaling
-                    particle.style.transform = `scale(${scale})`;
+                    particle.style.opacity = 1 - ease;
+                    particle.style.transform = `scale(${1 - ease * 0.4})`;
 
                     if (progress < 1) {
                         requestAnimationFrame(updateParticle);
                     } else {
-                        // Remove the particle after animation completes
-                        if (particle.parentNode) {
-                            particle.parentNode.removeChild(particle);
-                        }
+                        particle.remove();
                     }
                 }
 
                 requestAnimationFrame(updateParticle);
             }
-
-            // Function to create ripple effect from touch point
-            function createRippleEffect(e) {
-                const button = document.getElementById('startFlipButton');
-                const rect = button.getBoundingClientRect();
-
-                // Create ripple element
-                const ripple = document.createElement('div');
-                ripple.className = 'ripple';
-
-                // Position ripple at touch point
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                ripple.style.left = `${x}px`;
-                ripple.style.top = `${y}px`;
-
-                // Start with small size
-                ripple.style.width = '0px';
-                ripple.style.height = '0px';
-
-                // Add ripple to button container
-                document.body.appendChild(ripple);
-
-                // Determine max size based on distance to farthest corner
-                const distances = [
-                    Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)), // to top-left
-                    Math.sqrt(Math.pow(rect.width - x, 2) + Math.pow(y, 2)), // to top-right
-                    Math.sqrt(Math.pow(x, 2) + Math.pow(rect.height - y, 2)), // to bottom-left
-                    Math.sqrt(Math.pow(rect.width - x, 2) + Math.pow(rect.height - y, 2)) // to bottom-right
-                ];
-                const maxSize = Math.max(...distances) * 2;
-
-                // Animate ripple
-                ripple.animate([
-                    { width: '0px', height: '0px', opacity: 0.7 },
-                    { width: `${maxSize}px`, height: `${maxSize}px`, opacity: 0 }
-                ], {
-                    duration: 800,
-                    easing: 'ease-out'
-                });
-
-                // Remove ripple after animation completes
-                setTimeout(() => {
-                    if (ripple.parentNode) {
-                        ripple.parentNode.removeChild(ripple);
-                    }
-                }, 800);
-            }
         }
 
-        // Function to send command to Firebase
         function sendCommand(command) {
             if (remoteRef) {
                 remoteRef.push({
-                    command: command,
+                    command,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 }).then(() => {
                     console.log('Command sent:', command);
@@ -348,10 +261,7 @@
             }
         }
 
-        // Initialize when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            initRemoteController();
-        });
+        document.addEventListener('DOMContentLoaded', initRemoteController);
     </script>
 </body>
 

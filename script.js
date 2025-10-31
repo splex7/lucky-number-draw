@@ -257,7 +257,7 @@ class DrawSystem {
         const remoteButton = document.getElementById('remoteButton');
         if (remoteButton) {
             remoteButton.addEventListener('click', () => {
-                this.playRemoteButtonSound();
+       
                 this.openRemotePage();
             });
         }
@@ -518,14 +518,13 @@ class DrawSystem {
                     this.startGameButton.textContent = '이어서 하기'; // Continue
                     this.startGameButton.title = '이전에 중단된 게임 이어서 하기';
                 } else {
-                    // If game was properly ended, show "새게임시작하기" (New Game)
-                    this.startGameButton.textContent = '새게임시작하기'; // New Game
-                    this.startGameButton.title = '새 게임 시작하기';
+                    this.startGameButton.textContent = '시작하기'; // New Game
+                    this.startGameButton.title = '시작하기';
                 }
             } else {
-                // If no saved state, show default start game text
-                this.startGameButton.textContent = '새게임시작하기'; // New Game
-                this.startGameButton.title = '새 게임 시작하기';
+
+                this.startGameButton.textContent = '시작하기'; // New Game
+                this.startGameButton.title = '시작하기';
             }
         }
     }
@@ -984,9 +983,9 @@ class DrawSystem {
     copyResults() {
         navigator.clipboard.writeText(this.resultsContent.textContent)
             .then(() => {
-                this.copyResultsButton.textContent = 'Copied!';
+                this.copyResultsButton.textContent = '복사됨!';
                 setTimeout(() => {
-                    this.copyResultsButton.textContent = 'Copy Results';
+                    this.copyResultsButton.textContent = '결과 복사하기';
                 }, 2000);
             });
     }
