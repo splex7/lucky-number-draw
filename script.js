@@ -23,16 +23,16 @@ class DrawSystem {
         this.flipSoundB.load();
         this.flipSoundA.addEventListener('ended', () => { this.flipSoundA.currentTime = 0; });
         this.flipSoundB.addEventListener('ended', () => { this.flipSoundB.currentTime = 0; });
-        
+
         // Create and preload audio object for remote button clicks
         this.remoteButtonSound = new Audio('button.mp3');
         this.remoteButtonSound.preload = "auto";
         this.remoteButtonSound.load();
         this.remoteButtonSound.addEventListener('ended', () => { this.remoteButtonSound.currentTime = 0; });
-        
+
         // Remote button cooldown tracking
         this.remoteButtonCooldown = false;
-        
+
         // 사운드 옵션 불러오기
         this.selectedFlipSound = localStorage.getItem('flipSoundOption') || 'a';
 
@@ -48,21 +48,21 @@ class DrawSystem {
 
         // Initialize Firebase for remote control
         this.initializeFirebase();
-        
+
         // Add event listener to prevent accidental refreshes and save state
         window.addEventListener('beforeunload', (e) => {
             this.cleanupFirebase();
             this.saveGameState();
-            
+
             // Show confirmation dialog for accidental refreshes
             const confirmationMessage = 'Are you sure you want to leave? Your game progress will be lost unless it was saved.';
             e.returnValue = confirmationMessage;
             return confirmationMessage;
         });
-        
+
         // Restore game state on initialization if available
         this.restoreGameState();
-        
+
         // Update start button text based on game status
         this.updateStartButton();
     }
@@ -129,7 +129,7 @@ class DrawSystem {
         this.shortcutsButton = document.getElementById('shortcutsHelp');
         this.shortcutsLightbox = document.getElementById('shortcutsLightbox');
         this.closeShortcutsButton = document.getElementById('closeShortcuts');
-        
+
         // Connection status element
         this.connectionStatusElement = document.getElementById('connectionStatus');
     }
@@ -214,23 +214,23 @@ class DrawSystem {
                     this.presetInput.value = normalized;
                     // Fire input event so any listeners see the change
                     this.presetInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    
+
                     // Provide visual feedback that example data was loaded
                     const originalText = this.loadExampleButton.textContent;
                     this.loadExampleButton.textContent = 'Loaded!';
                     this.loadExampleButton.classList.add('success');
-                    
+
                     // Highlight the textarea to make it clear that content was loaded
                     this.presetInput.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Light green
                     // Scroll to the textarea to make it visible
                     this.presetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
+
                     // Add a temporary message to indicate that the data is ready to use
-                    const presetLabel = this.presetInput.previousElementSibling || 
-                                      (this.presetInput.parentElement.querySelector('label') ? 
-                                       this.presetInput.parentElement.querySelector('label') : 
-                                       null);
-                                       
+                    const presetLabel = this.presetInput.previousElementSibling ||
+                        (this.presetInput.parentElement.querySelector('label') ?
+                            this.presetInput.parentElement.querySelector('label') :
+                            null);
+
                     if (presetLabel) {
                         const originalLabelText = presetLabel.innerHTML;
                         presetLabel.innerHTML = 'Prize Name, Draw Count <span style="color: #4CAF50; font-size: 0.9em;">(Example data loaded - ready to start game)</span>';
@@ -238,11 +238,11 @@ class DrawSystem {
                             presetLabel.innerHTML = originalLabelText;
                         }, 5000); // Show for 5 seconds
                     }
-                    
+
                     setTimeout(() => {
                         this.presetInput.style.backgroundColor = ''; // Reset to default
                     }, 2000);
-                    
+
                     setTimeout(() => {
                         this.loadExampleButton.textContent = originalText;
                         this.loadExampleButton.classList.remove('success');
@@ -339,19 +339,19 @@ class DrawSystem {
             numberPool: this.numberPool,
             flipSpeedStep: this.flipSpeedStep,
             gameStatus: this.gameStatus, // Add game status
-            
+
             // Form input values
             presetInputValue: this.presetInput ? this.presetInput.value : '',
             numberRangesInputValue: this.numberRangesInput ? this.numberRangesInput.value : '',
             titleInputValue: this.titleInput ? this.titleInput.value : '',
-            
+
             // UI state
             isAnimating: this.isAnimating,
-            
+
             // Get current active screen
             activeScreen: this.getCurrentActiveScreen()
         };
-        
+
         try {
             localStorage.setItem('luckyNumberDrawGameState', JSON.stringify(gameState));
             console.log('Game state saved');
@@ -365,9 +365,9 @@ class DrawSystem {
         try {
             const gameState = localStorage.getItem('luckyNumberDrawGameState');
             if (!gameState) return false;
-            
+
             const state = JSON.parse(gameState);
-            
+
             // Restore game state if it exists
             this.rounds = state.rounds || [];
             this.prizes = state.prizes || [];
@@ -380,7 +380,7 @@ class DrawSystem {
             this.flipSpeedStep = state.flipSpeedStep || 3;
             this.gameStatus = state.gameStatus || 'ended'; // Restore game status
             this.isAnimating = state.isAnimating || false;
-            
+
             // Only restore form input values if we're continuing a paused game, not when starting fresh after ending
             // When gameStatus was 'paused', it means we were in the middle of a game and should restore form values
             // When gameStatus was 'ended', it means the game was completed, so we shouldn't restore form values
@@ -396,7 +396,7 @@ class DrawSystem {
                     this.titleElement.textContent = state.titleInputValue;
                 }
             }
-            
+
             // If we have game state with rounds, restore the UI to game screen
             if (this.rounds.length > 0) {
                 // Switch to the appropriate screen
@@ -405,59 +405,60 @@ class DrawSystem {
                 } else {
                     this.switchScreen('gameScreen');
                 }
-                
+
                 // Recreate cards if in game screen
                 if (this.currentRoundNumbers && this.currentRoundNumbers.length > 0) {
                     this.createCards(this.currentRoundNumbers.length);
-                    
+
                     // Update card displays to match current state
                     this.updateCardsBasedOnState();
-                    
+
                     // Update round display
                     if (this.currentRoundDisplay) {
                         this.currentRoundDisplay.textContent = `${this.currentRound}`;
                     }
-                    
+
                     // Update prize display
                     const currentPrize = this.prizes[this.currentRound - 1];
                     const prizeDisplay = document.getElementById('currentPrizeDisplay');
                     if (prizeDisplay && currentPrize) {
-                        prizeDisplay.textContent = currentPrize;
+                        // Remove trailing ampersand if present
+                        prizeDisplay.textContent = currentPrize.replace(/&+$/, '').trim();
                     }
-                    
+
                     // Update remaining count
                     this.updateCardsRemaining();
-                    
+
                     // Enable next round button if all cards are revealed
                     if (this.nextRoundButton) {
                         // Check both the used numbers set and the actual card DOM state
-                        const allCardsRevealedInSet = this.currentRoundNumbers.every(num => 
+                        const allCardsRevealedInSet = this.currentRoundNumbers.every(num =>
                             this.usedNumbers.has(num)
                         );
-                        
+
                         // Also check the DOM to see if all cards are visually flipped
                         let allCardsRevealedInDOM = true;
                         if (this.cardContainer) {
                             const allCards = this.cardContainer.querySelectorAll('.card');
-                            allCardsRevealedInDOM = Array.from(allCards).every(card => 
+                            allCardsRevealedInDOM = Array.from(allCards).every(card =>
                                 card.classList.contains('flipped')
                             );
                         }
-                        
+
                         // Use the stricter condition - if both checks show all cards revealed
                         const allCardsRevealed = allCardsRevealedInSet && allCardsRevealedInDOM;
-                        
+
                         this.nextRoundButton.disabled = !allCardsRevealed;
-                        
+
                         // If all cards are revealed, flip functionality is not needed
                         // but if some cards are still unrevealed, flip functionality should be available
                         this.isAnimating = false; // Reset animation state
                     }
                 }
-                
+
                 console.log('Game state restored');
                 return true;
-            } 
+            }
             // If there's no active game but form data was saved, still restore the form values
             else if (state.activeScreen && state.activeScreen !== 'gameScreen') {
                 // Switch to the saved screen
@@ -468,24 +469,24 @@ class DrawSystem {
         } catch (error) {
             console.error('Failed to restore game state:', error);
         }
-        
+
         return false;
     }
-    
+
     // Update card displays to match current game state
     updateCardsBasedOnState() {
         if (!this.cardContainer) return;
-        
+
         const cards = this.cardContainer.querySelectorAll('.card');
         cards.forEach((card, index) => {
             if (index < this.currentRoundNumbers.length) {
                 const number = this.currentRoundNumbers[index];
                 const cardBack = card.querySelector('.card-back');
-                
+
                 if (cardBack) {
                     cardBack.textContent = number;
                 }
-                
+
                 // Apply appropriate classes based on whether the number has been used
                 if (this.usedNumbers.has(number)) {
                     card.classList.add('flipped', 'reveal');
@@ -494,23 +495,23 @@ class DrawSystem {
                 }
             }
         });
-        
+
         // Update remaining count after card state has been updated
         this.updateCardsRemaining();
     }
-    
+
     // Get current active screen ID
     getCurrentActiveScreen() {
         const activeScreen = document.querySelector('.screen.active');
         return activeScreen ? activeScreen.id : 'startScreen';
     }
-    
+
     // Update the start button text based on game status
     updateStartButton() {
         if (this.startGameButton) {
             // Check if there's a saved game state
             const hasSavedGameState = localStorage.getItem('luckyNumberDrawGameState') !== null;
-            
+
             if (hasSavedGameState) {
                 // If game was paused (not properly ended), show "이어서 하기" (Continue)
                 if (this.gameStatus === 'paused') {
@@ -533,15 +534,15 @@ class DrawSystem {
         if (this.remoteButtonCooldown) {
             return; // Skip if in cooldown
         }
-        
+
         // Set cooldown flag
         this.remoteButtonCooldown = true;
-        
+
         // Play sound
         this.remoteButtonSound.pause();
         this.remoteButtonSound.currentTime = 0;
         this.remoteButtonSound.play().catch(e => console.log('Audio play failed:', e));
-        
+
         // Reset cooldown after 0.5 seconds
         setTimeout(() => {
             this.remoteButtonCooldown = false;
@@ -743,7 +744,7 @@ class DrawSystem {
     startGame() {
         // Check if there's a saved game state
         const hasSavedGameState = localStorage.getItem('luckyNumberDrawGameState') !== null;
-        
+
         if (hasSavedGameState && this.gameStatus === 'paused') {
             // If there's a paused game, restore it instead of starting a new one
             this.restoreGameState();
@@ -758,7 +759,7 @@ class DrawSystem {
             this.currentRoundNumbers = [];
             this.roundResults = [];
             this.numberPool = [];
-            
+
             // Otherwise, start a new game
             if (!this.buildPoolFromInput()) return;
 
@@ -826,10 +827,10 @@ class DrawSystem {
 
             // Set game status to paused when starting a new game
             this.gameStatus = 'paused';
-            
+
             this.switchScreen('gameScreen');
             this.currentRoundDisplay.textContent = `${this.currentRound}`;
-            document.getElementById('currentPrizeDisplay').textContent = this.prizes[0];
+            document.getElementById('currentPrizeDisplay').textContent = this.prizes[0].replace(/&+$/, '').trim();
             this.nextRoundButton.disabled = true;
             // Show adjust lightbox for the first item
             this.showLightbox();
@@ -866,7 +867,7 @@ class DrawSystem {
         });
 
         this.currentRoundDisplay.textContent = `${this.currentRound}`;
-        document.getElementById('currentPrizeDisplay').textContent = currentPrize;
+        document.getElementById('currentPrizeDisplay').textContent = currentPrize.replace(/&+$/, '').trim();
         this.nextRoundButton.disabled = true;
         this.showLightbox();
     }
@@ -878,7 +879,8 @@ class DrawSystem {
         const currentPrize = this.prizes[this.currentRound - 1];
         const prizeTitleEl = document.getElementById('currentPrizeName');
         const lightboxContent = this.cardAdjustLightbox.querySelector('.lightbox-content');
-        prizeTitleEl.textContent = currentPrize;
+        // Remove trailing ampersand if present
+        prizeTitleEl.textContent = currentPrize.replace(/&+$/, '').trim();
         // Dynamically constrain max selectable cards to remaining pool size
         const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size + this.currentRoundNumbers.length;
         this.adjustCardCountInput.setAttribute('max', String(Math.min(this.maxLimit, remainingPossibleNumbers)));
@@ -917,33 +919,68 @@ class DrawSystem {
         this.hideLightbox();
     }
 
+    // Check if current prize name ends with '&'
+    isSpecialPrize() {
+        const currentPrize = this.prizes[this.currentRound - 1];
+        return currentPrize && currentPrize.trim().endsWith('&');
+    }
+
+    // Check if conditions for special animation are met
+    shouldPlaySpecialAnimation() {
+        // Check if current prize is special (ends with '&')
+        const isSpecial = this.isSpecialPrize();
+        // Check if there's exactly one unflipped card
+        const unflippedCards = Array.from(document.querySelectorAll('.card:not(.flipped)'));
+        return isSpecial && unflippedCards.length === 1;
+    }
+
+    // Special animation for single card with special prize
+    async playShakeAnimation() {
+        const cards = Array.from(document.querySelectorAll('.card:not(.flipped)'));
+        if (cards.length === 0) return;
+
+        const card = cards[0];
+        card.classList.add('shake-strong');
+
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2초간 흔들기
+        card.classList.remove('shake-strong');
+    }
+
     async startCardFlips() {
         if (this.isAnimating) return;
+        this.isAnimating = true;
 
-        // Play button sound
-        const buttonSound = new Audio('button.mp3');
-        buttonSound.play().catch(e => console.log('Button sound play failed:', e));
+        try {
+            // Play button sound
+            const buttonSound = new Audio('button.mp3');
+            await buttonSound.play().catch(e => console.log('Button sound play failed:', e));
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const isSpecial = this.isSpecialPrize();
 
-        // Add 1 second delay before starting card flips
-        await new Promise(resolve => setTimeout(resolve, 2500));
-
-        // Check if there are any cards still waiting to be flipped
-        if (this.cardContainer) {
-            const unrevealedCards = Array.from(this.cardContainer.querySelectorAll('.card')).filter(card => 
-                !card.classList.contains('flipped')
-            );
-            
-            if (unrevealedCards.length > 0) {
-                this.revealCards();
-            } else {
-                // All cards are already flipped, enable next round button
-                if (this.nextRoundButton) {
-                    this.nextRoundButton.disabled = false;
-                }
-                console.log('All cards already revealed, cannot start flips');
+            if (isSpecial) {
+                // For special prizes, play shake animation for 3 seconds
+                await this.playShakeAnimation();
             }
-        } else {
-            this.revealCards();
+            // Check if there are any cards still waiting to be flipped
+            if (this.cardContainer) {
+                const unrevealedCards = Array.from(this.cardContainer.querySelectorAll('.card')).filter(card =>
+                    !card.classList.contains('flipped')
+                );
+
+                if (unrevealedCards.length > 0) {
+                    await this.revealCards();
+                } else {
+                    // All cards are already flipped, enable next round button
+                    if (this.nextRoundButton) {
+                        this.nextRoundButton.disabled = false;
+                    }
+                    console.log('All cards already revealed, cannot start flips');
+                }
+            } else {
+                await this.revealCards();
+            }
+        } finally {
+            this.isAnimating = false;
         }
     }
 
@@ -954,7 +991,9 @@ class DrawSystem {
         // First show round results
         this.roundResults.forEach(result => {
             const sortedNumbers = [...result.numbers].sort((a, b) => a - b);
-            resultsText += `Round ${result.round} - ${result.prize}:\n`;
+            // Remove trailing ampersand if present when displaying results
+            const displayPrize = result.prize.replace(/&+$/, '').trim();
+            resultsText += `Round ${result.round} - ${displayPrize}:\n`;
             resultsText += sortedNumbers.join(', ') + '\n\n';
         });
 
@@ -971,18 +1010,20 @@ class DrawSystem {
 
         // Create delivery list
         allNumbers.forEach(item => {
-            deliveryList += `${item.number} - ${item.prize}\n`;
+            // Remove trailing ampersand if present when displaying delivery list
+            const displayPrize = item.prize.replace(/&+$/, '').trim();
+            deliveryList += `${item.number} - ${displayPrize}\n`;
         });
 
         // Combine both lists
         const finalResults = resultsText + '\n' + deliveryList;
         this.resultsContent.textContent = finalResults;
         this.saveToHistory();
-        
+
         // Set game status to 'ended' when game is properly completed
         this.gameStatus = 'ended';
         this.saveGameState(); // Save the updated status
-        
+
         this.switchScreen('resultsScreen');
     }
 
@@ -1006,7 +1047,7 @@ class DrawSystem {
         this.prizeImages = [];
 
         // Set default preset values
-       const defaultPreset = `스타벅스 기프티콘,10
+        const defaultPreset = `스타벅스 기프티콘,10
 문화상품권 1만원권,8
 무선 블루투스 이어폰,5
 운동화 상품권,4
@@ -1019,15 +1060,15 @@ LG 미니 공기청정기,3
         if (this.numberRangesInput) this.numberRangesInput.value = '1-500';
         // Clear saved game state
         localStorage.removeItem('luckyNumberDrawGameState');
-        
+
         this.numberPool = [];
         this.titleInput.value = 'Lucky Number Draw';
         this.titleElement.textContent = 'Lucky Number Draw';
-        
+
         // Set game status to 'ended' when returning to start screen
         this.gameStatus = 'ended';
         this.switchScreen('startScreen');
-        
+
         // Update the start button text
         this.updateStartButton();
     }
@@ -1193,7 +1234,7 @@ LG 미니 공기청정기,3
             console.warn('Firebase SDK not loaded. Remote control will not work.');
             return;
         }
-        
+
         // Load Firebase config from external file if available
         // Users need to create firebaseConfig.js with their own values
         try {
@@ -1217,16 +1258,16 @@ LG 미니 공기청정기,3
                 };
                 console.warn('Firebase config not found. Please create firebaseConfig.js with your own values.');
             }
-            
+
             // Initialize Firebase app
             if (!firebase.apps.length) {
                 firebase.initializeApp(this.firebaseConfig);
             }
-            
+
             // Get database reference
             const db = firebase.database();
             this.remoteCommandsRef = db.ref('remoteCommands');
-            
+
             // Listen for connection status
             const connectedRef = db.ref('.info/connected');
             connectedRef.on('value', (snap) => {
@@ -1244,26 +1285,26 @@ LG 미니 공기청정기,3
                     console.log('Firebase disconnected');
                 }
             });
-            
+
             // Remove any existing listeners to prevent duplicates
             if (this.remoteCommandsRef) {
                 this.remoteCommandsRef.off('child_added');
             }
-            
+
             // Listen for commands from remote controller
             this.remoteCommandsRef.on('child_added', (snapshot) => {
                 const commandData = snapshot.val();
                 this.handleRemoteCommand(commandData.command);
-                
+
                 // Remove the command after processing to avoid duplicate processing
                 snapshot.ref.remove();
             });
-            
+
             console.log('Firebase initialized for remote control');
         } catch (error) {
             console.error('Error initializing Firebase:', error);
             console.warn('Remote control functionality will be disabled.');
-            
+
             // Update connection status to show error if needed
             if (this.connectionStatusElement) {
                 this.connectionStatusElement.textContent = 'Firebase Error';
@@ -1286,13 +1327,13 @@ LG 미니 공기청정기,3
                         if (this.cardAdjustLightbox && !this.cardAdjustLightbox.classList.contains('hidden')) return;
                         // Do not start flips if Next Round is already enabled (all cards revealed)
                         if (this.nextRoundButton && this.nextRoundButton.disabled === false) return;
-                        
+
                         // Check if there are any cards that still need to be flipped
                         if (this.cardContainer) {
-                            const unrevealedCards = Array.from(this.cardContainer.querySelectorAll('.card')).filter(card => 
+                            const unrevealedCards = Array.from(this.cardContainer.querySelectorAll('.card')).filter(card =>
                                 !card.classList.contains('flipped')
                             );
-                            
+
                             if (unrevealedCards.length > 0) {
                                 this.startCardFlips();
                             } else {
