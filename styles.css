@@ -355,6 +355,16 @@ h3 {
     transform-origin: center;
 }
 
+/* Blur effect for special prizes */
+.card.special-prize-blur .card-back {
+    filter: blur(8px);
+    transition: filter 2s ease-out;
+}
+
+.card.special-prize-blur.flipped .card-back {
+    filter: blur(0);
+}
+
 .prize-title {
     color: white;
     text-align: center;

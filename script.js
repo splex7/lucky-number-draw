@@ -637,13 +637,13 @@ class DrawSystem {
     }
 
     getFlipTimings() {
-        // Steps: 1 slowest ... 5 fastest
+        // Steps: 1 slowest ... 5 fastest - currently set to 80% of original speed
         const map = {
-            1: { delay: 800, duration: 700 },
-            2: { delay: 650, duration: 650 },
-            3: { delay: 500, duration: 600 },
-            4: { delay: 350, duration: 500 },
-            5: { delay: 200, duration: 450 }
+            1: { delay: 640, duration: 560 },
+            2: { delay: 520, duration: 520 },
+            3: { delay: 400, duration: 480 },
+            4: { delay: 280, duration: 400 },
+            5: { delay: 160, duration: 360 }
         };
         return map[this.flipSpeedStep] || map[3];
     }
@@ -954,7 +954,7 @@ class DrawSystem {
             // Play button sound
             const buttonSound = new Audio('button.mp3');
             await buttonSound.play().catch(e => console.log('Button sound play failed:', e));
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2500));
             const isSpecial = this.isSpecialPrize();
 
             if (isSpecial) {
@@ -1057,7 +1057,7 @@ LG 미니 공기청정기,3
 
 
         this.presetInput.value = defaultPreset;
-        if (this.numberRangesInput) this.numberRangesInput.value = '1-500';
+        if (this.numberRangesInput) this.numberRangesInput.value = '1-255, 501-755';
         // Clear saved game state
         localStorage.removeItem('luckyNumberDrawGameState');
 
