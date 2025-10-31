@@ -257,7 +257,6 @@ class DrawSystem {
         const remoteButton = document.getElementById('remoteButton');
         if (remoteButton) {
             remoteButton.addEventListener('click', () => {
-       
                 this.openRemotePage();
             });
         }
@@ -918,26 +917,33 @@ class DrawSystem {
         this.hideLightbox();
     }
 
-    startCardFlips() {
-        if (!this.isAnimating) {
-            // Check if there are any cards still waiting to be flipped
-            if (this.cardContainer) {
-                const unrevealedCards = Array.from(this.cardContainer.querySelectorAll('.card')).filter(card => 
-                    !card.classList.contains('flipped')
-                );
-                
-                if (unrevealedCards.length > 0) {
-                    this.revealCards();
-                } else {
-                    // All cards are already flipped, enable next round button
-                    if (this.nextRoundButton) {
-                        this.nextRoundButton.disabled = false;
-                    }
-                    console.log('All cards already revealed, cannot start flips');
-                }
-            } else {
+    async startCardFlips() {
+        if (this.isAnimating) return;
+
+        // Play button sound
+        const buttonSound = new Audio('button.mp3');
+        buttonSound.play().catch(e => console.log('Button sound play failed:', e));
+
+        // Add 1 second delay before starting card flips
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        // Check if there are any cards still waiting to be flipped
+        if (this.cardContainer) {
+            const unrevealedCards = Array.from(this.cardContainer.querySelectorAll('.card')).filter(card => 
+                !card.classList.contains('flipped')
+            );
+            
+            if (unrevealedCards.length > 0) {
                 this.revealCards();
+            } else {
+                // All cards are already flipped, enable next round button
+                if (this.nextRoundButton) {
+                    this.nextRoundButton.disabled = false;
+                }
+                console.log('All cards already revealed, cannot start flips');
             }
+        } else {
+            this.revealCards();
         }
     }
 
@@ -1000,11 +1006,14 @@ class DrawSystem {
         this.prizeImages = [];
 
         // Set default preset values
-        const defaultPreset = `Amazon Kindle Paperwhite,6
-Sony WH-1000XM5 Wireless Headphones,5
-Apple Watch Series 9,4
-PlayStation 5 Digital Edition,2
-Apple iPad Pro 12.9-inch,1`;
+       const defaultPreset = `스타벅스 기프티콘,10
+문화상품권 1만원권,8
+무선 블루투스 이어폰,5
+운동화 상품권,4
+LG 미니 공기청정기,3
+안마기,2
+아이패드 10세대,1`;
+
 
         this.presetInput.value = defaultPreset;
         if (this.numberRangesInput) this.numberRangesInput.value = '1-500';

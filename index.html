@@ -38,12 +38,14 @@
                     </div>
                     <div class="input-group">
                         <label>Prize Name, Draw Count (2-column CSV):</label>
-                        <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count"
-                            style="width: 100%; font-family: monospace;">Amazon Kindle Paperwhite,6
-Sony WH-1000XM5 Wireless Headphones,5
-Apple Watch Series 9,4
-PlayStation 5 Digital Edition,2
-Apple iPad Pro 12.9-inch,1</textarea>
+                        <textarea id="presetRounds" rows="8" placeholder="상품명, 추첨횟수"
+                            style="width: 100%; font-family: monospace;">스타벅스 기프티콘,10
+문화상품권 1만원권,8
+무선 블루투스 이어폰,5
+운동화 상품권,4
+LG 미니 공기청정기,3
+안마기,2
+아이패드 10세대,1</textarea>
                         <div class="button-group" style="margin-top: 8px;">
                             <button id="loadExampleButton" class="control-button" type="button">Load Example</button>
                         </div>
@@ -93,7 +95,6 @@ Apple iPad Pro 12.9-inch,1</textarea>
                 <div class="lightbox-content">
                     <h1 id="currentPrizeName" class="prize-title"></h1>
                     <div class="input-group">
-                        <label>Number of cards to draw in this round:</label>
                         <input type="number" id="adjustCardCount" min="1" max="2000" value="1">
                     </div>
                     <div class="button-group">
@@ -119,8 +120,8 @@ Apple iPad Pro 12.9-inch,1</textarea>
             <h1>Game History</h1>
             <div id="historyList" class="history-container"></div>
             <div class="button-group">
-                <button id="backToStart" class="control-button">Back to Start</button>
-                <button id="clearHistory" class="control-button">Clear All</button>
+                <button id="backToStart" class="control-button">메인화면으로</button>
+                <button id="clearHistory" class="control-button">모두삭제하기</button>
             </div>
         </div>
 
