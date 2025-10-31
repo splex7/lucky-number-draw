@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Number Draw System</title>
+    <title>행운의 번호 추첨 시스템</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -12,13 +12,13 @@
     <div class="main-container">
         <!-- Start Screen -->
         <div id="startScreen" class="screen active">
-            <h1>Lucky Number Draw</h1>
+            <h1>행운의 번호 추첨</h1>
           
             <div class="setup-container">
                 <div class="button-group">
-                    <button id="startGameButton" class="main-button">🚀Start Game</button>
-                    <button id="settingsButton" class="control-button">⚙️Settings</button>
-                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: Start flips (when available)\nEnter (Lightbox): Confirm\n↑/↓: Increase/Decrease flip speed\n→: Next Round (when available)">❔</button>
+                    <button id="startGameButton" class="main-button">🚀게임 시작</button>
+                    <button id="settingsButton" class="control-button">⚙️</button>
+                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: 카드 뒤집기 시작 (가능한 경우)\nEnter (팝업): 확인\n↑/↓: 뒤집기 속도 증가/감소\n→: 다음 라운드 (가능한 경우)">❔</button>
                     <button id="historyButton" class="control-button">📜</button>
                 </div>
             </div>
@@ -29,11 +29,11 @@
                     <h2>Settings</h2>
                     <div class="input-group">
                         <label>Title (Customize with Your Desired Title) </label>
-                        <input type="text" id="titleInput" value="Lucky Number Draw" class="title-input">
+                        <input type="text" id="titleInput" value="행운의 번호 추첨" class="title-input">
                     </div>
                     <div class="input-group">
                         <label>Draw Range (e.g., 1-442, 501-872) — Max total 2000 numbers</label>
-                        <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872" value="1-500">
+                        <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872" value="1-250, 501-750">
                     </div>
                     <div class="input-group">
                         <label>Prize Name, Draw Count (2-column CSV):</label>
@@ -126,7 +126,7 @@ Apple iPad Pro 12.9-inch,1</textarea>
         <div id="historyContentLightbox" class="lightbox hidden">
             <div class="lightbox-content">
                 <h3 id="historyContentTitle"></h3>
-                <div id="historyContentText" class="history-content"></div>
+                <div id="historyContentText" class="history-content prize-results"></div>
                 <div class="button-group">
                     <button id="closeHistoryContent" class="control-button">Close</button>
                 </div>

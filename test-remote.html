@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remote Controller Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Remote Controller</h1>
+        <button id="goButton">Go</button>
+        <div class="status" id="status">Ready</div>
+    </div>
+
+    <audio id="buttonSound" src="button.mp3"></audio>
+
+    <script>
+        let isCooldown = false;
+        
+        document.getElementById('goButton').addEventListener('click', function() {
+            if (isCooldown) {
+                return; // Skip if in cooldown
+            }
+            
+            // Set cooldown flag
+            isCooldown = true;
+            this.disabled = true;
+            document.getElementById('status').textContent = 'Button in cooldown...';
+            
+            // Play sound
+            const audio = document.getElementById('buttonSound');
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            
+            // Reset cooldown after 0.5 seconds
+            setTimeout(() => {
+                isCooldown = false;
+                this.disabled = false;
+                document.getElementById('status').textContent = 'Ready';
+            }, 500);
+        });
+    </script>
+</body>
+</html>

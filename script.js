@@ -12,6 +12,7 @@ class DrawSystem {
         this.numberPool = [];
         this.maxLimit = 2000;
         this.flipSpeedStep = 3; // 1..5, default 3
+        this.gameStatus = 'ended'; // 'paused' or 'ended'
 
         // Create and preload audio objects for flip sounds
         this.flipSoundA = new Audio('flip-a.mp3');
@@ -22,6 +23,16 @@ class DrawSystem {
         this.flipSoundB.load();
         this.flipSoundA.addEventListener('ended', () => { this.flipSoundA.currentTime = 0; });
         this.flipSoundB.addEventListener('ended', () => { this.flipSoundB.currentTime = 0; });
+        
+        // Create and preload audio object for remote button clicks
+        this.remoteButtonSound = new Audio('button.mp3');
+        this.remoteButtonSound.preload = "auto";
+        this.remoteButtonSound.load();
+        this.remoteButtonSound.addEventListener('ended', () => { this.remoteButtonSound.currentTime = 0; });
+        
+        // Remote button cooldown tracking
+        this.remoteButtonCooldown = false;
+        
         // 사운드 옵션 불러오기
         this.selectedFlipSound = localStorage.getItem('flipSoundOption') || 'a';
 
@@ -51,6 +62,9 @@ class DrawSystem {
         
         // Restore game state on initialization if available
         this.restoreGameState();
+        
+        // Update start button text based on game status
+        this.updateStartButton();
     }
 
 
@@ -243,6 +257,7 @@ class DrawSystem {
         const remoteButton = document.getElementById('remoteButton');
         if (remoteButton) {
             remoteButton.addEventListener('click', () => {
+                this.playRemoteButtonSound();
                 this.openRemotePage();
             });
         }
@@ -324,6 +339,7 @@ class DrawSystem {
             roundResults: this.roundResults,
             numberPool: this.numberPool,
             flipSpeedStep: this.flipSpeedStep,
+            gameStatus: this.gameStatus, // Add game status
             
             // Form input values
             presetInputValue: this.presetInput ? this.presetInput.value : '',
@@ -363,18 +379,23 @@ class DrawSystem {
             this.roundResults = state.roundResults || [];
             this.numberPool = state.numberPool || [];
             this.flipSpeedStep = state.flipSpeedStep || 3;
+            this.gameStatus = state.gameStatus || 'ended'; // Restore game status
             this.isAnimating = state.isAnimating || false;
             
-            // Restore form input values if they exist in the saved state
-            if (state.presetInputValue !== undefined && this.presetInput) {
-                this.presetInput.value = state.presetInputValue;
-            }
-            if (state.numberRangesInputValue !== undefined && this.numberRangesInput) {
-                this.numberRangesInput.value = state.numberRangesInputValue;
-            }
-            if (state.titleInputValue !== undefined && this.titleInput) {
-                this.titleInput.value = state.titleInputValue;
-                this.titleElement.textContent = state.titleInputValue;
+            // Only restore form input values if we're continuing a paused game, not when starting fresh after ending
+            // When gameStatus was 'paused', it means we were in the middle of a game and should restore form values
+            // When gameStatus was 'ended', it means the game was completed, so we shouldn't restore form values
+            if (state.gameStatus === 'paused') {
+                if (state.presetInputValue !== undefined && this.presetInput) {
+                    this.presetInput.value = state.presetInputValue;
+                }
+                if (state.numberRangesInputValue !== undefined && this.numberRangesInput) {
+                    this.numberRangesInput.value = state.numberRangesInputValue;
+                }
+                if (state.titleInputValue !== undefined && this.titleInput) {
+                    this.titleInput.value = state.titleInputValue;
+                    this.titleElement.textContent = state.titleInputValue;
+                }
             }
             
             // If we have game state with rounds, restore the UI to game screen
@@ -484,6 +505,51 @@ class DrawSystem {
         const activeScreen = document.querySelector('.screen.active');
         return activeScreen ? activeScreen.id : 'startScreen';
     }
+    
+    // Update the start button text based on game status
+    updateStartButton() {
+        if (this.startGameButton) {
+            // Check if there's a saved game state
+            const hasSavedGameState = localStorage.getItem('luckyNumberDrawGameState') !== null;
+            
+            if (hasSavedGameState) {
+                // If game was paused (not properly ended), show "이어서 하기" (Continue)
+                if (this.gameStatus === 'paused') {
+                    this.startGameButton.textContent = '이어서 하기'; // Continue
+                    this.startGameButton.title = '이전에 중단된 게임 이어서 하기';
+                } else {
+                    // If game was properly ended, show "새게임시작하기" (New Game)
+                    this.startGameButton.textContent = '새게임시작하기'; // New Game
+                    this.startGameButton.title = '새 게임 시작하기';
+                }
+            } else {
+                // If no saved state, show default start game text
+                this.startGameButton.textContent = '새게임시작하기'; // New Game
+                this.startGameButton.title = '새 게임 시작하기';
+            }
+        }
+    }
+
+    // Function to play remote button click sound with cooldown
+    playRemoteButtonSound() {
+        if (this.remoteButtonCooldown) {
+            return; // Skip if in cooldown
+        }
+        
+        // Set cooldown flag
+        this.remoteButtonCooldown = true;
+        
+        // Play sound
+        this.remoteButtonSound.pause();
+        this.remoteButtonSound.currentTime = 0;
+        this.remoteButtonSound.play().catch(e => console.log('Audio play failed:', e));
+        
+        // Reset cooldown after 0.5 seconds
+        setTimeout(() => {
+            this.remoteButtonCooldown = false;
+        }, 500);
+    }
+
 
     switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
@@ -677,77 +743,99 @@ class DrawSystem {
     }
 
     startGame() {
-        if (!this.buildPoolFromInput()) return;
+        // Check if there's a saved game state
+        const hasSavedGameState = localStorage.getItem('luckyNumberDrawGameState') !== null;
+        
+        if (hasSavedGameState && this.gameStatus === 'paused') {
+            // If there's a paused game, restore it instead of starting a new one
+            this.restoreGameState();
+            this.switchScreen('gameScreen');
+        } else {
+            // Reset all game data to ensure complete fresh start
+            this.rounds = [];
+            this.prizes = [];
+            this.currentRound = 1;
+            this.usedNumbers.clear();
+            this.reservedNumbers.clear();
+            this.currentRoundNumbers = [];
+            this.roundResults = [];
+            this.numberPool = [];
+            
+            // Otherwise, start a new game
+            if (!this.buildPoolFromInput()) return;
 
-        const presetValues = this.presetInput.value.trim();
-        if (!presetValues) {
-            alert('Please enter the product name and draw count.');
-            return;
-        }
-
-        const lines = presetValues.split('\n').map(line => line.trim()).filter(line => line);
-        if (lines.length === 0) {
-            alert('Please enter the correct format.');
-            return;
-        }
-
-        this.rounds = [];
-
-        for (const rawLine of lines) {
-            const line = rawLine.trim();
-            const parts = line.split(',').map(s => s.trim()).filter(Boolean);
-            if (parts.length < 2) {
-                alert('Each line must contain at least a prize and a count.');
-                return;
-            }
-            // Find last numeric token as count
-            let countIndex = -1;
-            for (let i = parts.length - 1; i >= 0; i--) {
-                if (/^\d+$/.test(parts[i])) { countIndex = i; break; }
-            }
-            if (countIndex === -1) {
-                alert('Each line must end with a numeric draw count.');
-                return;
-            }
-            const numberCount = parseInt(parts[countIndex], 10);
-            const prize = parts.slice(0, countIndex).join(', ').trim();
-
-            if (!prize || isNaN(numberCount) || numberCount <= 0 || numberCount > this.numberPool.length) {
-                alert('Please enter the correct format (Product Name, Draw Count).');
+            const presetValues = this.presetInput.value.trim();
+            if (!presetValues) {
+                alert('Please enter the product name and draw count.');
                 return;
             }
 
-            this.rounds.push(numberCount);
-            this.prizes.push(prize);
+            const lines = presetValues.split('\n').map(line => line.trim()).filter(line => line);
+            if (lines.length === 0) {
+                alert('Please enter the correct format.');
+                return;
+            }
+
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+                const parts = line.split(',').map(s => s.trim()).filter(Boolean);
+                if (parts.length < 2) {
+                    alert('Each line must contain at least a prize and a count.');
+                    return;
+                }
+                // Find last numeric token as count
+                let countIndex = -1;
+                for (let i = parts.length - 1; i >= 0; i--) {
+                    if (/^\d+$/.test(parts[i])) { countIndex = i; break; }
+                }
+                if (countIndex === -1) {
+                    alert('Each line must end with a numeric draw count.');
+                    return;
+                }
+                const numberCount = parseInt(parts[countIndex], 10);
+                const prize = parts.slice(0, countIndex).join(', ').trim();
+
+                if (!prize || isNaN(numberCount) || numberCount <= 0 || numberCount > this.numberPool.length) {
+                    alert('Please enter the correct format (Product Name, Draw Count).');
+                    return;
+                }
+
+                this.rounds.push(numberCount);
+                this.prizes.push(prize);
+            }
+
+            const firstRoundCount = this.rounds[0];
+
+            // Ensure card count doesn't exceed available pool
+            if (firstRoundCount > this.numberPool.length) {
+                alert(`The draw count cannot exceed the available numbers (${this.numberPool.length}).`);
+                return;
+            }
+
+            this.currentRoundNumbers = this.generateUniqueNumbers(firstRoundCount);
+            if (this.currentRoundNumbers.length !== firstRoundCount) {
+                alert('Failed to generate unique numbers for the first round. Please check the range and counts.');
+                return;
+            }
+            this.createCards(firstRoundCount);
+            this.updateCardsRemaining();
+            this.roundResults.push({
+                round: this.currentRound,
+                prize: this.prizes[0],
+                numbers: [...this.currentRoundNumbers]
+            });
+
+            // Set game status to paused when starting a new game
+            this.gameStatus = 'paused';
+            
+            this.switchScreen('gameScreen');
+            this.currentRoundDisplay.textContent = `${this.currentRound}`;
+            document.getElementById('currentPrizeDisplay').textContent = this.prizes[0];
+            this.nextRoundButton.disabled = true;
+            // Show adjust lightbox for the first item
+            this.showLightbox();
         }
-
-        const firstRoundCount = this.rounds[0];
-
-        // Ensure card count doesn't exceed available pool
-        if (firstRoundCount > this.numberPool.length) {
-            alert(`The draw count cannot exceed the available numbers (${this.numberPool.length}).`);
-            return;
-        }
-
-        this.currentRoundNumbers = this.generateUniqueNumbers(firstRoundCount);
-        if (this.currentRoundNumbers.length !== firstRoundCount) {
-            alert('Failed to generate unique numbers for the first round. Please check the range and counts.');
-            return;
-        }
-        this.createCards(firstRoundCount);
-        this.updateCardsRemaining();
-        this.roundResults.push({
-            round: this.currentRound,
-            prize: this.prizes[0],
-            numbers: [...this.currentRoundNumbers]
-        });
-
-        this.switchScreen('gameScreen');
-        this.currentRoundDisplay.textContent = `${this.currentRound}`;
-        document.getElementById('currentPrizeDisplay').textContent = this.prizes[0];
-        this.nextRoundButton.disabled = true;
-        // Show adjust lightbox for the first item
-        this.showLightbox();
     }
 
     showNextRound() {
@@ -885,6 +973,11 @@ class DrawSystem {
         const finalResults = resultsText + '\n' + deliveryList;
         this.resultsContent.textContent = finalResults;
         this.saveToHistory();
+        
+        // Set game status to 'ended' when game is properly completed
+        this.gameStatus = 'ended';
+        this.saveGameState(); // Save the updated status
+        
         this.switchScreen('resultsScreen');
     }
 
@@ -922,7 +1015,13 @@ Apple iPad Pro 12.9-inch,1`;
         this.numberPool = [];
         this.titleInput.value = 'Lucky Number Draw';
         this.titleElement.textContent = 'Lucky Number Draw';
+        
+        // Set game status to 'ended' when returning to start screen
+        this.gameStatus = 'ended';
         this.switchScreen('startScreen');
+        
+        // Update the start button text
+        this.updateStartButton();
     }
 
     showSettings() {

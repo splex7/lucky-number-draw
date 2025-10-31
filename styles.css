@@ -21,16 +21,20 @@ h1 {
 h2 {
     font-size: 6em;
 }
+
 h3 {
-    font-size: 1.2em;;
+    font-size: 1.2em;
+    ;
 }
 
-h2, h3 {
+h2,
+h3 {
     color: white;
 }
 
 .main-container {
-    margin: auto 0; /* 세로 중앙 유지 */
+    margin: auto 0;
+    /* 세로 중앙 유지 */
     width: 100%;
     max-width: 1920px;
     height: 100vh;
@@ -92,7 +96,8 @@ h2, h3 {
     font-size: 1.1em;
 }
 
-.header, .footer {
+.header,
+.footer {
     position: fixed;
     left: 0;
     width: 100%;
@@ -111,19 +116,20 @@ h2, h3 {
 }
 
 .footer {
-   
+
     bottom: 0;
     background: rgba(0, 0, 0, 0.9);
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-    padding-bottom: calc(0.8rem + env(safe-area-inset-bottom)); 
+    padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
 }
+
 @media screen and (max-device-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
     .footer {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
     }
-  }
+}
 
 
 .round-info {
@@ -167,6 +173,7 @@ h2, h3 {
     cursor: pointer;
     font-size: 1.1em;
     transition: all 0.3s ease;
+    min-height: 50px;
 }
 
 .main-button {
@@ -174,6 +181,7 @@ h2, h3 {
     color: white;
     font-weight: bold;
     border-radius: 8px;
+    
 }
 
 .control-button {
@@ -187,6 +195,8 @@ h2, h3 {
     gap: 1rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    /* make group align vertically */
+    flex-direction: column;
 }
 
 .card {
@@ -244,13 +254,16 @@ h2, h3 {
     0% {
         filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
     }
+
     50% {
         filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.8));
     }
+
     100% {
         filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
     }
 }
+
 .prize-title {
     color: white;
     text-align: center;
@@ -261,15 +274,18 @@ h2, h3 {
 
 .connection-status {
     font-size: 0.9em;
-    color: #f44336; /* Default to red (disconnected) */
+    color: #f44336;
+    /* Default to red (disconnected) */
     padding: 5px 10px;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.5);
-    margin-left: 1rem; /* Add some left margin */
+    margin-left: 1rem;
+    /* Add some left margin */
 }
 
 .connection-status.connected {
-    color: #4CAF50; /* Green when connected */
+    color: #4CAF50;
+    /* Green when connected */
 }
 
 
@@ -417,11 +433,6 @@ h2, h3 {
         margin: 0.5rem;
         font-size: 1.2em;
     }
-
-    .prize-display {
-        font-size: 1.2em;
-        margin: 0.5rem 0;
-    }
 }
 
 .modal {
@@ -450,13 +461,6 @@ h2, h3 {
     min-width: 50vw;
     max-height: 90vh;
     overflow-y: auto;
-}
-
-.button-group {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
 }
 
 .control-button {
@@ -549,6 +553,11 @@ h2, h3 {
     font-family: monospace;
     font-size: 1.1em;
     line-height: 1.5;
+}
+
+.prize-results {
+    height: 300px;
+    overflow-y: auto;
 }
 
 @media (max-width: 768px) {
