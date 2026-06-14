@@ -1072,22 +1072,11 @@ class DrawSystem {
         this.prizes = [];
         this.prizeImages = [];
 
-        // Set default preset values
-        const defaultPreset = `Amazon Kindle Paperwhite,6
-Sony WH-1000XM5 Wireless Headphones,5
-Apple Watch Series 9,4
-PlayStation 5 Digital Edition,2
-Apple iPad Pro 12.9-inch,1`;
-
-        this.presetInput.value = defaultPreset;
-        if (this.numberRangesInput) this.numberRangesInput.value = '1-500';
         // Clear saved game state
         localStorage.removeItem('luckyNumberDrawGameState');
         
         this.numberPool = [];
-        this.titleInput.value = 'Lucky Number Draw';
-        this.titleElement.textContent = 'Lucky Number Draw';
-        this.savePrizeSettings();
+        this.loadPrizeSettings();
         this.switchScreen('startScreen');
     }
 
