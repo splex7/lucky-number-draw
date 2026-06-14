@@ -1,115 +1,93 @@
-# Lucky Number Draw System  
+# Lucky Number Draw System
 
-<img width="1671" alt="image" src="https://github.com/user-attachments/assets/3830b484-9f8e-4343-9c6e-bc1ea7e61c74" />
+![Lucky Number Draw main screen](docs/main-screen.png)
 
-A modern web-based lucky draw system for prize distribution events. This system provides an interactive and engaging way to randomly select winners for different prizes.  
+A browser-based lucky draw system for live prize events. It supports animated card reveals, reusable prize CSV lists, round-by-round winner tracking, history storage, keyboard shortcuts, and an optional remote controller.
 
-## English Version 🇺🇸  
+## Live Demo
 
-📌 **[Live Demo](https://splex7.github.io/lucky-number-draw/)** — Try the Lucky Number Draw system right in your browser!
+[https://splex7.github.io/lucky-number-draw/](https://splex7.github.io/lucky-number-draw/)
 
-### Features  
-- **Interactive Card Drawing**: Animated card flipping interface for an engaging draw experience  
-- **Customizable Settings**:  
-  - Custom event title  
-  - Adjustable draw range (up to 1000)  
-  - Configurable prize list with draw counts  
-- **Round Management**:  
-  - Supports multiple rounds  
-  - Adjustable number of cards per round  
-  - Automatic tracking of used numbers  
-- **Results Management**:  
-  - Sorted delivery list by number  
-  - Easy-to-read format for prize distribution  
-  - Copy results functionality  
+## Features
 
-### Technical Details  
-- Built with vanilla JavaScript  
-- Uses Anime.js for smooth animations  
-- Responsive design for both desktop and mobile devices  
-- No external dependencies required  
+- **Modern event screen**: Neon stage-style start screen and animated card draw experience.
+- **Prize setup panel**:
+  - Custom event title
+  - Draw ranges such as `1-500` or `1-442, 501-872`
+  - Up to 2000 total numbers
+  - Prize CSV editor using `Prize Name, Draw Count`
+  - Saved prize lists using `localStorage`
+  - Load, save, update, and delete CSV presets
+- **Design & sound settings**:
+  - Flip sound options using MP3 and generated HTML/Web Audio effects
+  - Optional remote controller entry point
+- **Round management**:
+  - First-prize confirmation before starting
+  - Fixed draw count display by default
+  - Edit count only when needed
+  - Balanced card grid with up to 8 cards per row
+  - Automatic duplicate prevention across rounds
+- **Results and history**:
+  - Round-by-round results
+  - Number-sorted delivery list
+  - Copy results
+  - Local draw history with app-styled dialogs
+- **Controls**:
+  - Enter: start flips or confirm modal/lightbox
+  - Up/Down: adjust flip speed
+  - Right Arrow: move to next round when available
 
-### Setup  
-1. Clone the repository  
-2. Open `index.html` in a modern web browser  
-3. No build process or server required  
+## Setup
 
-### Usage  
-1. **Initial Setup**:  
-   - Click the settings (⚙️) button to configure:  
-     - Event title  
-     - Maximum draw range  
-     - Prize list and draw counts  
-2. **Starting the Draw**:  
-   - Click "Start Game" to begin  
-   - Click on cards to reveal numbers  
-   - Use "Next Round" to proceed to the next prize  
-3. **Adjusting Cards**:  
-   - Each round allows adjustment of the number of cards  
-   - Confirm or cancel the adjustment as needed  
-4. **Viewing Results**:  
-   - Results are displayed in two formats:  
-     - Round-by-round summary  
-     - Sorted delivery list for easy prize distribution  
+1. Clone the repository.
+2. Open `index.html` in a modern browser.
+3. No build step is required.
 
----
+Optional remote control requires a `firebaseConfig.js` file based on `firebaseConfig.sample.js`.
 
-## 한국어 버전 🇰🇷  
+## Usage
 
-📌 **[라이브 데모 바로가기](https://splex7.github.io/lucky-number-draw/)** — 브라우저에서 바로 행운 번호 추첨 시스템을 체험해보세요!
+1. Click **Prize** to configure the title, draw range, and prize CSV.
+2. Save frequently used prize CSV lists from the Prize setup panel.
+3. Click **Settings** to choose flip sounds or open the remote controller.
+4. Click **Start Draw**.
+5. Confirm the first prize in the app dialog.
+6. Start card flips by pressing Enter or clicking an unrevealed card.
+7. Continue rounds with **Next Round**.
+8. End the game to view and copy results.
 
-### 행운 번호 추첨 시스템  
+## 한국어 안내
 
-상품 배포 이벤트를 위한 현대적인 웹 기반 추첨 시스템입니다. 이 시스템은 다양한 상품의 당첨자를 무작위로 선택하는 인터랙티브하고 재미있는 방식을 제공합니다.  
+라이브 경품 추첨 행사를 위한 브라우저 기반 추첨 시스템입니다. 카드 플립 애니메이션, 경품 CSV 저장/불러오기, 라운드별 결과 관리, 히스토리 저장, 키보드 단축키, 선택형 원격 컨트롤러를 제공합니다.
 
-### 주요 기능  
-- **인터랙티브 카드 추첨**: 애니메이션 카드 뒤집기 인터페이스를 통해 몰입감 있는 추첨 경험 제공  
-- **맞춤형 설정**:  
-  - 이벤트 제목 사용자 지정 가능  
-  - 최대 1000까지 추첨 범위 조정 가능  
-  - 상품 목록 및 추첨 개수 설정 가능  
-- **라운드 관리**:  
-  - 다중 라운드 지원  
-  - 라운드당 카드 수 조정 가능  
-  - 사용된 번호 자동 추적  
-- **결과 관리**:  
-  - 번호별 정렬된 배송 목록 제공  
-  - 경품 배포를 위한 가독성 높은 형식  
-  - 결과 복사 기능  
+### 주요 기능
 
-### 기술적 세부사항  
-- 순수 JavaScript로 제작  
-- 부드러운 애니메이션을 위해 Anime.js 사용  
-- 데스크톱 및 모바일에 최적화된 반응형 디자인  
-- 별도의 외부 라이브러리 필요 없음  
+- **Prize 설정 분리**: 이벤트 제목, 추첨 번호 범위, 경품 CSV, 저장된 경품 목록 관리
+- **Settings 분리**: 디자인 상태, 플립 사운드, 원격 컨트롤러
+- **로컬 저장**: 경품 CSV 프리셋과 추첨 히스토리를 `localStorage`에 저장
+- **앱 내부 모달**: 브라우저 기본 `alert`/`confirm` 대신 일관된 확인/알림 UI 사용
+- **라운드 시작 확인**: 첫 경품명과 수량을 확인한 뒤 추첨 시작
+- **수량 수정 모드**: 기본은 확정 수량 표시, 필요할 때만 `Edit count`로 수정
+- **균형 카드 배치**: 한 줄 최대 8개, 10개면 5개/5개처럼 행별 카드 수를 최대한 균등하게 배치
 
-### 설정 방법  
-1. 저장소를 클론합니다.  
-2. 최신 웹 브라우저에서 `index.html`을 엽니다.  
-3. 별도의 빌드 과정이나 서버 없이 바로 실행 가능  
+### 사용 방법
 
-### 사용 방법  
-1. **초기 설정**:  
-   - 설정(⚙️) 버튼을 클릭하여 다음을 조정:  
-     - 이벤트 제목  
-     - 최대 추첨 범위  
-     - 상품 목록 및 추첨 개수  
-2. **추첨 시작**:  
-   - "게임 시작"을 클릭하여 시작  
-   - 카드를 클릭하여 번호 확인  
-   - "다음 라운드" 버튼을 눌러 다음 상품 추첨 진행  
-3. **카드 조정**:  
-   - 각 라운드에서 카드 개수를 조정 가능  
-   - 조정 사항을 확인 또는 취소 가능  
-4. **결과 확인**:  
-   - 결과는 두 가지 형식으로 표시:  
-     - 라운드별 요약  
-     - 경품 배포가 쉬운 정렬된 배송 목록  
+1. **Prize**에서 경품 CSV와 번호 범위를 설정합니다.
+2. 자주 쓰는 CSV는 Saved Prize Lists에 저장합니다.
+3. **Settings**에서 사운드와 원격 컨트롤러를 설정합니다.
+4. **Start Draw**를 눌러 첫 경품 확인 후 추첨을 시작합니다.
+5. 카드를 클릭하거나 Enter를 눌러 번호를 공개합니다.
+6. 라운드가 끝나면 **Next Round**로 다음 경품을 진행합니다.
+7. 종료 후 결과를 확인하고 복사합니다.
 
----
+## Technical Details
+
+- Vanilla JavaScript, HTML, and CSS
+- Anime.js for card animation
+- Canvas Confetti for celebration effects
+- Firebase Realtime Database support for optional remote commands
+- No bundler or build process required
 
 ## License
 
-This project is licensed under the MIT License – feel free to use, modify, distribute, and even commercialize it without restrictions. See the [LICENSE](LICENSE) file for details.
-
-This project is licensed under the MIT License – feel free to use, modify, distribute, and even commercialize it without restrictions. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

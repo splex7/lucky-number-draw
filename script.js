@@ -23,7 +23,11 @@ class DrawSystem {
         this.flipSoundA.addEventListener('ended', () => { this.flipSoundA.currentTime = 0; });
         this.flipSoundB.addEventListener('ended', () => { this.flipSoundB.currentTime = 0; });
         // 사운드 옵션 불러오기
-        this.selectedFlipSound = localStorage.getItem('flipSoundOption') || 'a';
+        const savedFlipSound = localStorage.getItem('flipSoundOption') || 'a';
+        this.selectedFlipSound = ['a', 'b', 'html-a', 'html-b', 'none'].includes(savedFlipSound) ? savedFlipSound : 'a';
+        localStorage.removeItem('colorTheme');
+        this.audioContext = null;
+        this.csvPresetsStorageKey = 'luckyNumberDrawCsvPresets';
 
         // Set up Firebase configuration (placeholder - will be configured later)
         this.firebaseConfig = null;
@@ -63,8 +67,11 @@ class DrawSystem {
         // Settings elements
         this.settingsModal = document.getElementById('settingsModal');
         this.settingsButton = document.getElementById('settingsButton');
+        this.prizeButton = document.getElementById('prizeButton');
         this.saveSettingsButton = document.getElementById('saveSettings');
         this.closeSettingsButton = document.getElementById('closeSettings');
+        this.settingsModalTitle = document.getElementById('settingsModalTitle');
+        this.settingsModalDescription = document.getElementById('settingsModalDescription');
         this.titleInput = document.getElementById('titleInput');
         this.titleElement = document.querySelector('h1');
 
@@ -72,6 +79,13 @@ class DrawSystem {
         this.presetInput = document.getElementById('presetRounds');
         this.cardCountInput = document.getElementById('cardCount');
         this.numberRangesInput = document.getElementById('numberRanges');
+        this.csvPresetNameInput = document.getElementById('csvPresetName');
+        this.csvPresetSelect = document.getElementById('csvPresetSelect');
+        this.csvPresetStatus = document.getElementById('csvPresetStatus');
+        this.loadCsvPresetButton = document.getElementById('loadCsvPreset');
+        this.saveCsvPresetButton = document.getElementById('saveCsvPreset');
+        this.updateCsvPresetButton = document.getElementById('updateCsvPreset');
+        this.deleteCsvPresetButton = document.getElementById('deleteCsvPreset');
 
         // Buttons
         this.startGameButton = document.getElementById('startGameButton');
@@ -92,6 +106,9 @@ class DrawSystem {
         this.adjustCardCountInput = document.getElementById('adjustCardCount');
         this.confirmAdjustButton = document.getElementById('confirmAdjust');
         this.cancelAdjustButton = document.getElementById('cancelAdjust');
+        this.editRoundCountButton = document.getElementById('editRoundCount');
+        this.roundDrawCountDisplay = document.getElementById('roundDrawCountDisplay');
+        this.roundCountEditPanel = document.getElementById('roundCountEditPanel');
 
         // History elements
         this.historyScreen = document.getElementById('historyScreen');
@@ -118,6 +135,13 @@ class DrawSystem {
         
         // Connection status element
         this.connectionStatusElement = document.getElementById('connectionStatus');
+
+        // App dialog elements
+        this.appDialog = document.getElementById('appDialog');
+        this.appDialogTitle = document.getElementById('appDialogTitle');
+        this.appDialogMessage = document.getElementById('appDialogMessage');
+        this.appDialogConfirmButton = document.getElementById('appDialogConfirm');
+        this.appDialogCancelButton = document.getElementById('appDialogCancel');
     }
 
     setupEventListeners() {
@@ -128,13 +152,34 @@ class DrawSystem {
         this.newGameButton.addEventListener('click', () => this.resetGame());
 
         // Settings event listeners
-        this.settingsButton.addEventListener('click', () => this.showSettings());
+        this.settingsButton.addEventListener('click', () => this.showSettings('design'));
+        if (this.prizeButton) {
+            this.prizeButton.addEventListener('click', () => this.showSettings('prize'));
+        }
         this.saveSettingsButton.addEventListener('click', () => this.saveSettings());
         this.closeSettingsButton.addEventListener('click', () => this.hideSettings());
+        if (this.loadCsvPresetButton) {
+            this.loadCsvPresetButton.addEventListener('click', () => this.loadSelectedCsvPreset());
+        }
+        if (this.saveCsvPresetButton) {
+            this.saveCsvPresetButton.addEventListener('click', () => this.saveCsvPreset());
+        }
+        if (this.updateCsvPresetButton) {
+            this.updateCsvPresetButton.addEventListener('click', () => this.updateCsvPreset());
+        }
+        if (this.deleteCsvPresetButton) {
+            this.deleteCsvPresetButton.addEventListener('click', () => this.deleteCsvPreset());
+        }
+        if (this.csvPresetSelect) {
+            this.csvPresetSelect.addEventListener('change', () => this.selectCsvPreset());
+        }
 
         // Lightbox event listeners
         this.confirmAdjustButton.addEventListener('click', () => this.confirmCardAdjustment());
         this.cancelAdjustButton.addEventListener('click', () => this.hideLightbox());
+        if (this.editRoundCountButton) {
+            this.editRoundCountButton.addEventListener('click', () => this.showRoundCountEditor());
+        }
 
         // Card container click event for starting card flips
         this.cardContainer.addEventListener('click', (e) => {
@@ -201,7 +246,7 @@ class DrawSystem {
                     // Fire input event so any listeners see the change
                     this.presetInput.dispatchEvent(new Event('input', { bubbles: true }));
                 } catch (e) {
-                    alert('Could not load example CSV (ex01.csv). Please ensure the file exists next to index.html.');
+                    this.showAlert('Could not load example CSV (ex01.csv). Please ensure the file exists next to index.html.');
                 }
             });
         }
@@ -215,18 +260,11 @@ class DrawSystem {
         }
 
         // 사운드 옵션 라디오 및 미리듣기 버튼 이벤트
-        document.getElementById('flipSoundA').addEventListener('change', () => {
-            this.selectedFlipSound = 'a';
-            localStorage.setItem('flipSoundOption', 'a');
-        });
-        document.getElementById('flipSoundB').addEventListener('change', () => {
-            this.selectedFlipSound = 'b';
-            localStorage.setItem('flipSoundOption', 'b');
-        });
-        document.getElementById('flipSoundNone').addEventListener('change', () => {
-            this.selectedFlipSound = 'none';
-            localStorage.setItem('flipSoundOption', 'none');
-        });
+        this.bindFlipSoundOption('flipSoundA', 'a');
+        this.bindFlipSoundOption('flipSoundB', 'b');
+        this.bindFlipSoundOption('flipSoundHtmlA', 'html-a');
+        this.bindFlipSoundOption('flipSoundHtmlB', 'html-b');
+        this.bindFlipSoundOption('flipSoundNone', 'none');
         document.getElementById('previewSoundA').addEventListener('click', () => {
             this.flipSoundA.pause();
             this.flipSoundA.currentTime = 0;
@@ -237,10 +275,17 @@ class DrawSystem {
             this.flipSoundB.currentTime = 0;
             this.flipSoundB.play();
         });
+        document.getElementById('previewSoundHtmlA').addEventListener('click', () => {
+            this.playHtmlFlipSound('tick');
+        });
+        document.getElementById('previewSoundHtmlB').addEventListener('click', () => {
+            this.playHtmlFlipSound('sweep');
+        });
 
         // Keyboard: ArrowUp to increase flip speed, ArrowDown to decrease
         document.addEventListener('keydown', (e) => {
             const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+            if (this.appDialog && !this.appDialog.classList.contains('hidden')) return;
             // If lightbox is open and Enter is pressed, confirm adjustment (skip)
             if (e.key === 'Enter' && this.cardAdjustLightbox && !this.cardAdjustLightbox.classList.contains('hidden')) {
                 e.preventDefault();
@@ -433,6 +478,43 @@ class DrawSystem {
         document.getElementById(screenId).classList.add('active');
     }
 
+    showAppDialog({ title = 'Notice', message = '', confirmText = 'OK', cancelText = null } = {}) {
+        return new Promise(resolve => {
+            if (!this.appDialog) {
+                resolve(true);
+                return;
+            }
+
+            this.appDialogTitle.textContent = title;
+            this.appDialogMessage.textContent = message;
+            this.appDialogConfirmButton.textContent = confirmText;
+
+            const isConfirm = Boolean(cancelText);
+            this.appDialogCancelButton.textContent = cancelText || 'Cancel';
+            this.appDialogCancelButton.classList.toggle('hidden', !isConfirm);
+
+            const cleanup = result => {
+                this.appDialog.classList.add('hidden');
+                this.appDialogConfirmButton.onclick = null;
+                this.appDialogCancelButton.onclick = null;
+                resolve(result);
+            };
+
+            this.appDialogConfirmButton.onclick = () => cleanup(true);
+            this.appDialogCancelButton.onclick = () => cleanup(false);
+            this.appDialog.classList.remove('hidden');
+            this.appDialogConfirmButton.focus();
+        });
+    }
+
+    showAlert(message, title = 'Notice') {
+        return this.showAppDialog({ title, message, confirmText: 'OK' });
+    }
+
+    showConfirm(message, title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel') {
+        return this.showAppDialog({ title, message, confirmText, cancelText });
+    }
+
     // Parse range input like "1-442, 501-872, 900, 905-910" into a sorted unique array
     parseNumberRanges(input) {
         const parts = input.split(',').map(p => p.trim()).filter(Boolean);
@@ -461,11 +543,11 @@ class DrawSystem {
         const raw = (this.numberRangesInput?.value || '').trim();
         const pool = this.parseNumberRanges(raw);
         if (pool.length === 0) {
-            alert('Please enter a valid draw range, e.g., 1-500 or 1-442, 501-872');
+            this.showAlert('Please enter a valid draw range, e.g., 1-500 or 1-442, 501-872');
             return false;
         }
         if (pool.length > this.maxLimit) {
-            alert(`The total count of numbers in the range cannot exceed ${this.maxLimit}.`);
+            this.showAlert(`The total count of numbers in the range cannot exceed ${this.maxLimit}.`);
             return false;
         }
         this.numberPool = pool;
@@ -492,6 +574,9 @@ class DrawSystem {
 
     createCards(count) {
         this.cardContainer.innerHTML = '';
+        const rowCount = Math.max(1, Math.ceil(count / 8));
+        const columnCount = Math.max(1, Math.ceil(count / rowCount));
+        this.cardContainer.style.setProperty('--card-columns', columnCount);
         for (let i = 0; i < count; i++) {
             const card = document.createElement('div');
             card.className = 'card';
@@ -526,6 +611,71 @@ class DrawSystem {
         return map[this.flipSpeedStep] || map[3];
     }
 
+    bindFlipSoundOption(elementId, optionValue) {
+        const option = document.getElementById(elementId);
+        if (!option) return;
+
+        option.addEventListener('change', () => {
+            this.selectedFlipSound = optionValue;
+            localStorage.setItem('flipSoundOption', optionValue);
+        });
+    }
+
+    getAudioContext() {
+        if (!this.audioContext) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return null;
+            this.audioContext = new AudioContextClass();
+        }
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        return this.audioContext;
+    }
+
+    playTone({ startFrequency, endFrequency, duration, type = 'sine', gain = 0.08 }) {
+        const context = this.getAudioContext();
+        if (!context) return;
+
+        const now = context.currentTime;
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(startFrequency, now);
+        oscillator.frequency.exponentialRampToValueAtTime(endFrequency, now + duration);
+
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(gain, now + 0.012);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.start(now);
+        oscillator.stop(now + duration + 0.02);
+    }
+
+    playHtmlFlipSound(kind) {
+        if (kind === 'tick') {
+            this.playTone({
+                startFrequency: 760,
+                endFrequency: 1180,
+                duration: 0.09,
+                type: 'square',
+                gain: 0.045
+            });
+            return;
+        }
+
+        this.playTone({
+            startFrequency: 280,
+            endFrequency: 980,
+            duration: 0.18,
+            type: 'triangle',
+            gain: 0.075
+        });
+    }
+
     // Function to play flip sound with reset and pause fix
     playFlipSound() {
         if (this.selectedFlipSound === 'a') {
@@ -536,7 +686,11 @@ class DrawSystem {
             this.flipSoundB.pause();
             this.flipSoundB.currentTime = 0;
             this.flipSoundB.play();
-        } // 
+        } else if (this.selectedFlipSound === 'html-a') {
+            this.playHtmlFlipSound('tick');
+        } else if (this.selectedFlipSound === 'html-b') {
+            this.playHtmlFlipSound('sweep');
+        }
     }
 
     async flipCard(index) {
@@ -619,28 +773,34 @@ class DrawSystem {
         }, 250);
     }
 
-    startGame() {
+    async startGame() {
         if (!this.buildPoolFromInput()) return;
+
+        this.currentRound = 1;
+        this.usedNumbers.clear();
+        this.reservedNumbers.clear();
+        this.currentRoundNumbers = [];
+        this.roundResults = [];
+        this.prizes = [];
+        this.rounds = [];
 
         const presetValues = this.presetInput.value.trim();
         if (!presetValues) {
-            alert('Please enter the product name and draw count.');
+            await this.showAlert('Please enter the product name and draw count.');
             return;
         }
 
         const lines = presetValues.split('\n').map(line => line.trim()).filter(line => line);
         if (lines.length === 0) {
-            alert('Please enter the correct format.');
+            await this.showAlert('Please enter the correct format.');
             return;
         }
-
-        this.rounds = [];
 
         for (const rawLine of lines) {
             const line = rawLine.trim();
             const parts = line.split(',').map(s => s.trim()).filter(Boolean);
             if (parts.length < 2) {
-                alert('Each line must contain at least a prize and a count.');
+                await this.showAlert('Each line must contain at least a prize and a count.');
                 return;
             }
             // Find last numeric token as count
@@ -649,14 +809,14 @@ class DrawSystem {
                 if (/^\d+$/.test(parts[i])) { countIndex = i; break; }
             }
             if (countIndex === -1) {
-                alert('Each line must end with a numeric draw count.');
+                await this.showAlert('Each line must end with a numeric draw count.');
                 return;
             }
             const numberCount = parseInt(parts[countIndex], 10);
             const prize = parts.slice(0, countIndex).join(', ').trim();
 
             if (!prize || isNaN(numberCount) || numberCount <= 0 || numberCount > this.numberPool.length) {
-                alert('Please enter the correct format (Product Name, Draw Count).');
+                await this.showAlert('Please enter the correct format (Product Name, Draw Count).');
                 return;
             }
 
@@ -668,13 +828,21 @@ class DrawSystem {
 
         // Ensure card count doesn't exceed available pool
         if (firstRoundCount > this.numberPool.length) {
-            alert(`The draw count cannot exceed the available numbers (${this.numberPool.length}).`);
+            await this.showAlert(`The draw count cannot exceed the available numbers (${this.numberPool.length}).`);
             return;
         }
 
+        const shouldStart = await this.showConfirm(
+            `The first prize is "${this.prizes[0]}".\nDraw count: ${firstRoundCount}\n\nStart now?`,
+            'Start Draw',
+            'Start',
+            'Cancel'
+        );
+        if (!shouldStart) return;
+
         this.currentRoundNumbers = this.generateUniqueNumbers(firstRoundCount);
         if (this.currentRoundNumbers.length !== firstRoundCount) {
-            alert('Failed to generate unique numbers for the first round. Please check the range and counts.');
+            await this.showAlert('Failed to generate unique numbers for the first round. Please check the range and counts.');
             return;
         }
         this.createCards(firstRoundCount);
@@ -693,11 +861,11 @@ class DrawSystem {
         this.showLightbox();
     }
 
-    showNextRound() {
+    async showNextRound() {
         if (this.isAnimating) return;
 
         if (this.currentRound >= this.rounds.length) {
-            alert('All rounds are complete!');
+            await this.showAlert('All rounds are complete!');
             this.endGame();
             return;
         }
@@ -709,7 +877,7 @@ class DrawSystem {
         // Check if we have enough numbers left
         const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size;
         if (nextRoundCount > remainingPossibleNumbers) {
-            alert(`Not enough numbers remaining. Only ${remainingPossibleNumbers} numbers are available.`);
+            await this.showAlert(`Not enough numbers remaining. Only ${remainingPossibleNumbers} numbers are available.`);
             return;
         }
 
@@ -731,6 +899,18 @@ class DrawSystem {
     showLightbox() {
         this.cardAdjustLightbox.classList.remove('hidden');
         this.adjustCardCountInput.value = this.currentRoundNumbers.length;
+        if (this.roundDrawCountDisplay) {
+            this.roundDrawCountDisplay.textContent = this.currentRoundNumbers.length;
+        }
+        if (this.roundCountEditPanel) {
+            this.roundCountEditPanel.classList.add('hidden');
+        }
+        if (this.editRoundCountButton) {
+            this.editRoundCountButton.classList.remove('hidden');
+        }
+        if (this.confirmAdjustButton) {
+            this.confirmAdjustButton.textContent = this.currentRound === 1 ? 'Start Round' : 'Continue';
+        }
         // Set current prize name
         const currentPrize = this.prizes[this.currentRound - 1];
         const prizeTitleEl = document.getElementById('currentPrizeName');
@@ -745,16 +925,38 @@ class DrawSystem {
         this.cardAdjustLightbox.classList.add('hidden');
     }
 
-    confirmCardAdjustment() {
+    showRoundCountEditor() {
+        if (this.roundCountEditPanel) {
+            this.roundCountEditPanel.classList.remove('hidden');
+        }
+        if (this.editRoundCountButton) {
+            this.editRoundCountButton.classList.add('hidden');
+        }
+        if (this.confirmAdjustButton) {
+            this.confirmAdjustButton.textContent = 'Apply & Continue';
+        }
+        if (this.adjustCardCountInput) {
+            this.adjustCardCountInput.focus();
+            this.adjustCardCountInput.select();
+        }
+    }
+
+    async confirmCardAdjustment() {
+        const isEditing = this.roundCountEditPanel && !this.roundCountEditPanel.classList.contains('hidden');
+        if (!isEditing) {
+            this.hideLightbox();
+            return;
+        }
+
         const newCount = parseInt(this.adjustCardCountInput.value);
         if (isNaN(newCount) || newCount < 1 || newCount > this.numberPool.length) {
-            alert(`Please enter a valid number between 1 and ${this.numberPool.length}`);
+            await this.showAlert(`Please enter a valid number between 1 and ${this.numberPool.length}`);
             return;
         }
 
         const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size + this.currentRoundNumbers.length;
         if (newCount > remainingPossibleNumbers) {
-            alert(`Not enough unique numbers remaining. Only ${remainingPossibleNumbers} numbers available.`);
+            await this.showAlert(`Not enough unique numbers remaining. Only ${remainingPossibleNumbers} numbers available.`);
             return;
         }
 
@@ -767,6 +969,9 @@ class DrawSystem {
         this.currentRoundNumbers = this.generateUniqueNumbers(newCount);
         this.createCards(newCount);
         this.updateCardsRemaining();
+        if (this.roundDrawCountDisplay) {
+            this.roundDrawCountDisplay.textContent = newCount;
+        }
 
         // Update the last round result
         this.roundResults[this.roundResults.length - 1].numbers = [...this.currentRoundNumbers];
@@ -848,6 +1053,7 @@ class DrawSystem {
         this.reservedNumbers.clear();
         this.currentRoundNumbers = [];
         this.roundResults = [];
+        this.prizes = [];
         this.prizeImages = [];
 
         // Set default preset values
@@ -868,12 +1074,209 @@ Apple iPad Pro 12.9-inch,1`;
         this.switchScreen('startScreen');
     }
 
-    showSettings() {
+    getCsvPresets() {
+        try {
+            const raw = localStorage.getItem(this.csvPresetsStorageKey);
+            const presets = JSON.parse(raw || '[]');
+            if (!Array.isArray(presets)) return [];
+            return presets
+                .filter(item => item && item.id && item.name && typeof item.csv === 'string')
+                .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+        } catch (error) {
+            console.error('Failed to read CSV presets:', error);
+            return [];
+        }
+    }
+
+    setCsvPresets(presets) {
+        localStorage.setItem(this.csvPresetsStorageKey, JSON.stringify(presets));
+    }
+
+    renderCsvPresetList(selectedId = '') {
+        if (!this.csvPresetSelect) return;
+
+        const presets = this.getCsvPresets();
+        this.csvPresetSelect.innerHTML = '';
+
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = presets.length ? 'Choose a saved list' : 'No saved lists';
+        this.csvPresetSelect.appendChild(emptyOption);
+
+        presets.forEach(preset => {
+            const option = document.createElement('option');
+            option.value = preset.id;
+            option.textContent = preset.name;
+            this.csvPresetSelect.appendChild(option);
+        });
+
+        this.csvPresetSelect.value = selectedId;
+        this.updateCsvPresetControls();
+    }
+
+    updateCsvPresetControls() {
+        const hasSelection = Boolean(this.csvPresetSelect && this.csvPresetSelect.value);
+        if (this.loadCsvPresetButton) this.loadCsvPresetButton.disabled = !hasSelection;
+        if (this.updateCsvPresetButton) this.updateCsvPresetButton.disabled = !hasSelection;
+        if (this.deleteCsvPresetButton) this.deleteCsvPresetButton.disabled = !hasSelection;
+    }
+
+    setCsvPresetStatus(message) {
+        if (this.csvPresetStatus) this.csvPresetStatus.textContent = message;
+    }
+
+    selectCsvPreset() {
+        const selectedId = this.csvPresetSelect ? this.csvPresetSelect.value : '';
+        const preset = this.getCsvPresets().find(item => item.id === selectedId);
+
+        if (this.csvPresetNameInput) {
+            this.csvPresetNameInput.value = preset ? preset.name : '';
+        }
+        this.setCsvPresetStatus(preset
+            ? `"${preset.name}" selected. Click Load selected to use it in the current CSV editor.`
+            : 'Current CSV editor is used when you start the game.'
+        );
+        this.updateCsvPresetControls();
+    }
+
+    loadSelectedCsvPreset() {
+        const selectedId = this.csvPresetSelect ? this.csvPresetSelect.value : '';
+        const preset = this.getCsvPresets().find(item => item.id === selectedId);
+
+        if (!preset) {
+            this.showAlert('Please choose a saved list to load.');
+            this.updateCsvPresetControls();
+            return;
+        }
+
+        if (this.csvPresetNameInput) this.csvPresetNameInput.value = preset.name;
+        if (this.presetInput) {
+            this.presetInput.value = preset.csv;
+            this.presetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        this.setCsvPresetStatus(`"${preset.name}" loaded into the current CSV editor.`);
+        this.updateCsvPresetControls();
+    }
+
+    saveCsvPreset() {
+        const name = this.csvPresetNameInput ? this.csvPresetNameInput.value.trim() : '';
+        const csv = this.presetInput ? this.presetInput.value.trim() : '';
+
+        if (!name) {
+            this.showAlert('Please enter a preset name.');
+            return;
+        }
+        if (!csv) {
+            this.showAlert('Please enter CSV content before saving.');
+            return;
+        }
+
+        const presets = this.getCsvPresets();
+        const existing = presets.find(item => item.name.toLowerCase() === name.toLowerCase());
+        const now = new Date().toISOString();
+
+        if (existing) {
+            this.showAlert(`"${name}" already exists. Choose it from Saved lists and use Update selected, or enter a new name.`);
+            this.renderCsvPresetList(existing.id);
+            return;
+        }
+
+        const preset = {
+            id: `csv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            name,
+            csv,
+            createdAt: now,
+            updatedAt: now
+        };
+
+        presets.unshift(preset);
+        this.setCsvPresets(presets);
+        this.renderCsvPresetList(preset.id);
+        this.setCsvPresetStatus(`"${preset.name}" saved as a new prize list.`);
+    }
+
+    updateCsvPreset() {
+        const selectedId = this.csvPresetSelect ? this.csvPresetSelect.value : '';
+        if (!selectedId) {
+            this.showAlert('Please select a preset to update.');
+            return;
+        }
+
+        const name = this.csvPresetNameInput ? this.csvPresetNameInput.value.trim() : '';
+        const csv = this.presetInput ? this.presetInput.value.trim() : '';
+        if (!name) {
+            this.showAlert('Please enter a preset name.');
+            return;
+        }
+        if (!csv) {
+            this.showAlert('Please enter CSV content before updating.');
+            return;
+        }
+
+        const presets = this.getCsvPresets();
+        const target = presets.find(item => item.id === selectedId);
+        if (!target) {
+            this.showAlert('Selected preset was not found.');
+            this.renderCsvPresetList();
+            return;
+        }
+
+        const duplicate = presets.find(item =>
+            item.id !== selectedId && item.name.toLowerCase() === name.toLowerCase()
+        );
+        if (duplicate) {
+            this.showAlert('Another preset already uses this name.');
+            return;
+        }
+
+        target.name = name;
+        target.csv = csv;
+        target.updatedAt = new Date().toISOString();
+        this.setCsvPresets(presets);
+        this.renderCsvPresetList(target.id);
+        this.setCsvPresetStatus(`"${target.name}" updated from the current CSV editor.`);
+    }
+
+    async deleteCsvPreset() {
+        const selectedId = this.csvPresetSelect ? this.csvPresetSelect.value : '';
+        if (!selectedId) {
+            await this.showAlert('Please select a preset to delete.');
+            return;
+        }
+
+        const presets = this.getCsvPresets();
+        const target = presets.find(item => item.id === selectedId);
+        if (!target) {
+            this.renderCsvPresetList();
+            return;
+        }
+
+        if (!await this.showConfirm(`Delete "${target.name}"?`, 'Delete Prize List', 'Delete', 'Cancel')) return;
+
+        this.setCsvPresets(presets.filter(item => item.id !== selectedId));
+        if (this.csvPresetNameInput) this.csvPresetNameInput.value = '';
+        this.renderCsvPresetList();
+        this.setCsvPresetStatus(`"${target.name}" deleted. Current CSV editor was not changed.`);
+    }
+
+    showSettings(mode = 'design') {
+        this.settingsModal.dataset.mode = mode;
+        if (this.settingsModalTitle) {
+            this.settingsModalTitle.textContent = mode === 'prize' ? 'Prize Setup' : 'Settings';
+        }
+        if (this.settingsModalDescription) {
+            this.settingsModalDescription.textContent = mode === 'prize'
+                ? 'Configure the event title, draw range, and prize round CSV.'
+                : 'Configure design, sound, and remote control options.';
+        }
         this.settingsModal.classList.remove('hidden');
+        this.renderCsvPresetList(this.csvPresetSelect ? this.csvPresetSelect.value : '');
         // 사운드 옵션 라디오 상태 동기화
         const opt = this.selectedFlipSound;
         document.getElementById('flipSoundA').checked = (opt === 'a');
         document.getElementById('flipSoundB').checked = (opt === 'b');
+        document.getElementById('flipSoundHtmlA').checked = (opt === 'html-a');
+        document.getElementById('flipSoundHtmlB').checked = (opt === 'html-b');
         document.getElementById('flipSoundNone').checked = (opt === 'none');
         // Update range label with current maxLimit
         const rangeInput = document.getElementById('numberRanges');
@@ -904,6 +1307,10 @@ Apple iPad Pro 12.9-inch,1`;
             this.selectedFlipSound = 'a';
         } else if (document.getElementById('flipSoundB').checked) {
             this.selectedFlipSound = 'b';
+        } else if (document.getElementById('flipSoundHtmlA').checked) {
+            this.selectedFlipSound = 'html-a';
+        } else if (document.getElementById('flipSoundHtmlB').checked) {
+            this.selectedFlipSound = 'html-b';
         } else {
             this.selectedFlipSound = 'none';
         }
@@ -963,13 +1370,19 @@ Apple iPad Pro 12.9-inch,1`;
         });
     }
 
-    deleteHistoryItem(gameId) {
-        if (confirm('Are you sure you want to delete this history item?')) {
-            let history = JSON.parse(localStorage.getItem('drawHistory') || '[]');
-            history = history.filter(game => game.id !== gameId);
-            localStorage.setItem('drawHistory', JSON.stringify(history));
-            this.loadHistory();
-        }
+    async deleteHistoryItem(gameId) {
+        const shouldDelete = await this.showConfirm(
+            'Delete this history item?',
+            'Delete History',
+            'Delete',
+            'Cancel'
+        );
+        if (!shouldDelete) return;
+
+        let history = JSON.parse(localStorage.getItem('drawHistory') || '[]');
+        history = history.filter(game => game.id !== gameId);
+        localStorage.setItem('drawHistory', JSON.stringify(history));
+        this.loadHistory();
     }
 
     showHistoryContent(game) {
@@ -1010,11 +1423,17 @@ Apple iPad Pro 12.9-inch,1`;
         this.endGameConfirmLightbox.classList.add('hidden');
     }
 
-    clearAllHistory() {
-        if (!confirm('Delete ALL history items? This cannot be undone.')) return;
+    async clearAllHistory() {
+        const shouldDelete = await this.showConfirm(
+            'Delete ALL history items? This cannot be undone.',
+            'Clear History',
+            'Delete All',
+            'Cancel'
+        );
+        if (!shouldDelete) return;
         localStorage.removeItem('drawHistory');
         this.loadHistory();
-        alert('All history cleared.');
+        await this.showAlert('All history cleared.');
     }
 
     openRemotePage() {
@@ -1166,4 +1585,3 @@ Apple iPad Pro 12.9-inch,1`;
 document.addEventListener('DOMContentLoaded', () => {
     window.drawSystem = new DrawSystem();
 });
-

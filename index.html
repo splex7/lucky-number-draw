@@ -12,55 +12,120 @@
     <div class="main-container">
         <!-- Start Screen -->
         <div id="startScreen" class="screen active">
-            <h1>Lucky Number Draw</h1>
-          
-            <div class="setup-container">
-                <div class="button-group">
-                    <button id="startGameButton" class="main-button">🚀Start Game</button>
-                    <button id="settingsButton" class="control-button">⚙️Settings</button>
-                    <button id="shortcutsHelp" class="control-button" type="button" title="Enter: Start flips (when available)\nEnter (Lightbox): Confirm\n↑/↓: Increase/Decrease flip speed\n→: Next Round (when available)">❔</button>
-                    <button id="historyButton" class="control-button">📜</button>
+            <div class="start-hero">
+                <div class="start-kicker">Live Event Draw System</div>
+                <h1>Lucky Number Draw</h1>
+                <p class="start-subtitle">Run prize rounds with animated cards, saved prize lists, and remote-ready controls.</p>
+
+                <div class="setup-container">
+                    <button id="startGameButton" class="main-button">Start Draw</button>
+                    <div class="start-actions" aria-label="Start screen actions">
+                        <button id="prizeButton" class="control-button">Prize</button>
+                        <button id="settingsButton" class="control-button">Settings</button>
+                        <button id="historyButton" class="control-button">History</button>
+                    </div>
                 </div>
+                <button id="shortcutsHelp" class="info-button" type="button" title="Keyboard shortcuts">i</button>
             </div>
 
             <!-- Settings Modal -->
             <div id="settingsModal" class="modal hidden">
                 <div class="modal-content">
-                    <h2>Settings</h2>
-                    <div class="input-group">
-                        <label>Title (Customize with Your Desired Title) </label>
-                        <input type="text" id="titleInput" value="Lucky Number Draw" class="title-input">
+                    <div class="settings-header">
+                        <h2 id="settingsModalTitle">Settings</h2>
+                        <p id="settingsModalDescription">Configure design and sound options.</p>
                     </div>
-                    <div class="input-group">
-                        <label>Draw Range (e.g., 1-442, 501-872) — Max total 2000 numbers</label>
-                        <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872" value="1-500">
-                    </div>
-                    <div class="input-group">
-                        <label>Prize Name, Draw Count (2-column CSV):</label>
-                        <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count"
-                        style="width: 100%; font-family: monospace;">Amazon Kindle Paperwhite,6
+
+                    <section class="settings-section settings-prize-setup">
+                        <div class="section-heading">
+                            <span>01</span>
+                            <h3>Prize Setup</h3>
+                        </div>
+                        <div class="input-group">
+                            <label for="titleInput">Display title</label>
+                            <input type="text" id="titleInput" value="Lucky Number Draw" class="title-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="numberRanges">Draw range</label>
+                            <input type="text" id="numberRanges" placeholder="1-500 or 1-442, 501-872" value="1-500">
+                            <p class="field-hint">Use one or more ranges. Maximum total is 2000 numbers.</p>
+                        </div>
+                        <div class="csv-store">
+                            <div class="csv-store-title">
+                                <h4>Saved Prize Lists</h4>
+                                <p>Load a saved CSV list, or save the current editor content as a reusable list.</p>
+                            </div>
+                            <div class="csv-store-fields">
+                                <div class="input-group">
+                                    <label for="csvPresetSelect">Saved lists</label>
+                                    <select id="csvPresetSelect">
+                                        <option value="">No saved lists</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="csvPresetName">List name</label>
+                                    <input type="text" id="csvPresetName" placeholder="e.g., Spring Event Prize List">
+                                </div>
+                            </div>
+                            <div class="csv-store-actions">
+                                <button id="loadCsvPreset" class="control-button" type="button">Load selected</button>
+                                <button id="saveCsvPreset" class="control-button" type="button">Save as new</button>
+                                <button id="updateCsvPreset" class="control-button" type="button">Update selected</button>
+                                <button id="deleteCsvPreset" class="control-button danger-button" type="button">Delete selected</button>
+                            </div>
+                            <div id="csvPresetStatus" class="csv-store-status">Current CSV editor is used when you start the game.</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="presetRounds">Current CSV editor</label>
+                            <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count">Amazon Kindle Paperwhite,6
 Sony WH-1000XM5 Wireless Headphones,5
 Apple Watch Series 9,4
 PlayStation 5 Digital Edition,2
 Apple iPad Pro 12.9-inch,1</textarea>
-                        <div class="button-group" style="margin-top: 8px;">
+                            <p class="field-hint">Format: one prize per line, ending with the draw count. Example: Prize Name,3</p>
+                        </div>
+                        <div class="section-actions">
                             <button id="loadExampleButton" class="control-button" type="button">Load Example</button>
                         </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Flip Sound Effect</label>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <label><input type="radio" name="flipSoundOption" id="flipSoundA" value="a"> <button type="button" id="previewSoundA" style="margin-right: 10px;">Beep</button></label>
-                            
-                            <label><input type="radio" name="flipSoundOption" id="flipSoundB" value="b"> <button type="button" id="previewSoundB" style="margin-right: 10px;">Flip</button></label>
-                            
-                            <label><input type="radio" name="flipSoundOption" id="flipSoundNone" value="none"> Silent</label>
+                    </section>
+
+                    <section class="settings-section settings-design-sound">
+                        <div class="section-heading">
+                            <span>02</span>
+                            <h3>Design & Sound</h3>
                         </div>
-                    </div>
-                    <div class="input-group">
-                        <button id="remoteButton" class="control-button">📱 Remote Controller</button>
-                    </div>
-                    <div class="button-group">
+                        <div class="design-status">
+                            <span>Visual theme</span>
+                            <strong>Neon Stage</strong>
+                        </div>
+                        <div class="input-group">
+                            <label>Flip sound effect</label>
+                            <div class="sound-options">
+                                <div class="sound-option">
+                                    <label for="flipSoundA"><input type="radio" name="flipSoundOption" id="flipSoundA" value="a"> Beep</label>
+                                    <button type="button" id="previewSoundA">Preview</button>
+                                </div>
+                                <div class="sound-option">
+                                    <label for="flipSoundB"><input type="radio" name="flipSoundOption" id="flipSoundB" value="b"> Flip</label>
+                                    <button type="button" id="previewSoundB">Preview</button>
+                                </div>
+                                <div class="sound-option">
+                                    <label for="flipSoundHtmlA"><input type="radio" name="flipSoundOption" id="flipSoundHtmlA" value="html-a"> HTML Tick</label>
+                                    <button type="button" id="previewSoundHtmlA">Preview</button>
+                                </div>
+                                <div class="sound-option">
+                                    <label for="flipSoundHtmlB"><input type="radio" name="flipSoundOption" id="flipSoundHtmlB" value="html-b"> HTML Sweep</label>
+                                    <button type="button" id="previewSoundHtmlB">Preview</button>
+                                </div>
+                                <div class="sound-option">
+                                    <label for="flipSoundNone"><input type="radio" name="flipSoundOption" id="flipSoundNone" value="none"> Silent</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="remoteButton" class="control-button remote-control-button">📱 Remote Controller</button>
+                    </section>
+
+                    <div class="settings-actions">
                         <button id="saveSettings" class="main-button">Save</button>
                         <button id="closeSettings" class="control-button">Close</button>
                     </div>
@@ -90,12 +155,17 @@ Apple iPad Pro 12.9-inch,1</textarea>
             <div id="cardAdjustLightbox" class="lightbox hidden">
                 <div class="lightbox-content">
                     <h1 id="currentPrizeName" class="prize-title"></h1>
-                    <div class="input-group">
-                        <label>Number of cards to draw in this round:</label>
+                    <div class="round-count-summary">
+                        <span>Draw count</span>
+                        <strong id="roundDrawCountDisplay">0</strong>
+                    </div>
+                    <div id="roundCountEditPanel" class="input-group hidden">
+                        <label for="adjustCardCount">Edit draw count for this round:</label>
                         <input type="number" id="adjustCardCount" min="1" max="2000" value="1">
                     </div>
                     <div class="button-group">
-                        <button id="confirmAdjust" class="main-button">Confirm</button>
+                        <button id="editRoundCount" class="control-button" type="button">Edit count</button>
+                        <button id="confirmAdjust" class="main-button">Start Round</button>
                         <button id="cancelAdjust" class="control-button">Cancel</button>
                     </div>
                 </div>
@@ -140,6 +210,18 @@ Apple iPad Pro 12.9-inch,1</textarea>
                 <div class="button-group">
                     <button id="confirmEndGame" class="main-button">Confirm</button>
                     <button id="cancelEndGame" class="control-button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Modal -->
+        <div id="appDialog" class="lightbox hidden">
+            <div class="lightbox-content app-dialog-content">
+                <h3 id="appDialogTitle">Notice</h3>
+                <div id="appDialogMessage" class="dialog-message"></div>
+                <div class="button-group">
+                    <button id="appDialogCancel" class="control-button hidden" type="button">Cancel</button>
+                    <button id="appDialogConfirm" class="main-button" type="button">OK</button>
                 </div>
             </div>
         </div>

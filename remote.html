@@ -344,10 +344,12 @@
                     console.log('Command sent:', command);
                 }).catch((error) => {
                     console.error('Error sending command:', error);
-                    alert('Failed to send command. Please check your connection.');
+                    connectionStatusElement.textContent = 'Command failed';
+                    connectionStatusElement.className = 'connection-status disconnected';
                 });
             } else {
-                alert('Remote controller not initialized. Please reload the page.');
+                connectionStatusElement.textContent = 'Remote not initialized';
+                connectionStatusElement.className = 'connection-status disconnected';
             }
         }
 
