@@ -12,12 +12,13 @@ A browser-based lucky draw system for live prize events. It supports animated ca
 
 - **Modern event screen**: Neon stage-style start screen and animated card draw experience.
 - **Prize setup panel**:
-  - Custom event title
+  - Simple mode for custom event title, draw range, and current prize CSV editor
   - Draw ranges such as `1-500` or `1-442, 501-872`
   - Up to 2000 total numbers
   - Prize CSV editor using `Prize Name, Draw Count`
-  - Saved prize lists using `localStorage`
-  - Load, save, update, and delete CSV presets
+  - Automatic `localStorage` saving for simple prize setup changes
+  - Advanced CSV sets using `localStorage`
+  - Load, save, update, and delete up to 5 CSV presets
 - **Design & sound settings**:
   - Flip sound options using MP3 and generated HTML/Web Audio effects
   - Optional remote controller entry point
@@ -48,7 +49,7 @@ Optional remote control requires a `firebaseConfig.js` file based on `firebaseCo
 ## Usage
 
 1. Click **Prize** to configure the title, draw range, and prize CSV.
-2. Save frequently used prize CSV lists from the Prize setup panel.
+2. Keep the Prize panel in simple mode for one active CSV, or enable Advanced CSV sets for reusable lists.
 3. Click **Settings** to choose flip sounds or open the remote controller.
 4. Click **Start Draw**.
 5. Confirm the first prize in the app dialog.
@@ -62,9 +63,10 @@ Optional remote control requires a `firebaseConfig.js` file based on `firebaseCo
 
 ### 주요 기능
 
-- **Prize 설정 분리**: 이벤트 제목, 추첨 번호 범위, 경품 CSV, 저장된 경품 목록 관리
+- **Prize 설정 분리**: 심플 모드는 이벤트 제목, 추첨 번호 범위, 현재 경품 CSV만 표시
+- **Advanced CSV sets**: 토글을 켜면 최대 5개 CSV 세트를 생성, 수정, 삭제 가능
 - **Settings 분리**: 디자인 상태, 플립 사운드, 원격 컨트롤러
-- **로컬 저장**: 경품 CSV 프리셋과 추첨 히스토리를 `localStorage`에 저장
+- **로컬 저장**: 심플 Prize 설정, CSV 세트, 추첨 히스토리를 `localStorage`에 저장
 - **앱 내부 모달**: 브라우저 기본 `alert`/`confirm` 대신 일관된 확인/알림 UI 사용
 - **라운드 시작 확인**: 첫 경품명과 수량을 확인한 뒤 추첨 시작
 - **수량 수정 모드**: 기본은 확정 수량 표시, 필요할 때만 `Edit count`로 수정
@@ -72,8 +74,8 @@ Optional remote control requires a `firebaseConfig.js` file based on `firebaseCo
 
 ### 사용 방법
 
-1. **Prize**에서 경품 CSV와 번호 범위를 설정합니다.
-2. 자주 쓰는 CSV는 Saved Prize Lists에 저장합니다.
+1. **Prize**에서 제목, 번호 범위, 현재 CSV를 설정합니다. 변경 내용은 자동 저장됩니다.
+2. 여러 CSV를 재사용해야 할 때만 **Advanced CSV sets**를 켜고 최대 5개까지 저장합니다.
 3. **Settings**에서 사운드와 원격 컨트롤러를 설정합니다.
 4. **Start Draw**를 눌러 첫 경품 확인 후 추첨을 시작합니다.
 5. 카드를 클릭하거나 Enter를 눌러 번호를 공개합니다.

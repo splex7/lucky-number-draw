@@ -28,6 +28,9 @@ class DrawSystem {
         localStorage.removeItem('colorTheme');
         this.audioContext = null;
         this.csvPresetsStorageKey = 'luckyNumberDrawCsvPresets';
+        this.prizeSettingsStorageKey = 'luckyNumberDrawPrizeSettings';
+        this.advancedPrizeModeStorageKey = 'luckyNumberDrawPrizeAdvanced';
+        this.maxCsvPresetCount = 5;
 
         // Set up Firebase configuration (placeholder - will be configured later)
         this.firebaseConfig = null;
@@ -36,6 +39,7 @@ class DrawSystem {
         this.remoteCommandsListener = null;
 
         this.initializeElements();
+        this.loadPrizeSettings();
         this.setupEventListeners();
         this.loadHistory();
 
@@ -82,6 +86,8 @@ class DrawSystem {
         this.csvPresetNameInput = document.getElementById('csvPresetName');
         this.csvPresetSelect = document.getElementById('csvPresetSelect');
         this.csvPresetStatus = document.getElementById('csvPresetStatus');
+        this.advancedPrizeToggle = document.getElementById('advancedPrizeToggle');
+        this.advancedPrizePanel = document.getElementById('advancedPrizePanel');
         this.loadCsvPresetButton = document.getElementById('loadCsvPreset');
         this.saveCsvPresetButton = document.getElementById('saveCsvPreset');
         this.updateCsvPresetButton = document.getElementById('updateCsvPreset');
@@ -172,6 +178,16 @@ class DrawSystem {
         }
         if (this.csvPresetSelect) {
             this.csvPresetSelect.addEventListener('change', () => this.selectCsvPreset());
+        }
+        [this.titleInput, this.numberRangesInput, this.presetInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', () => this.savePrizeSettings());
+            }
+        });
+        if (this.advancedPrizeToggle) {
+            this.advancedPrizeToggle.addEventListener('change', () => {
+                this.setAdvancedPrizeMode(this.advancedPrizeToggle.checked);
+            });
         }
 
         // Lightbox event listeners
@@ -1071,7 +1087,52 @@ Apple iPad Pro 12.9-inch,1`;
         this.numberPool = [];
         this.titleInput.value = 'Lucky Number Draw';
         this.titleElement.textContent = 'Lucky Number Draw';
+        this.savePrizeSettings();
         this.switchScreen('startScreen');
+    }
+
+    loadPrizeSettings() {
+        try {
+            const raw = localStorage.getItem(this.prizeSettingsStorageKey);
+            const settings = JSON.parse(raw || '{}');
+            if (settings && typeof settings === 'object') {
+                if (this.titleInput && typeof settings.title === 'string') {
+                    this.titleInput.value = settings.title;
+                    if (this.titleElement) this.titleElement.textContent = settings.title || 'Lucky Number Draw';
+                }
+                if (this.numberRangesInput && typeof settings.numberRanges === 'string') {
+                    this.numberRangesInput.value = settings.numberRanges;
+                }
+                if (this.presetInput && typeof settings.presetRounds === 'string') {
+                    this.presetInput.value = settings.presetRounds;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load prize settings:', error);
+        }
+
+        const advancedEnabled = localStorage.getItem(this.advancedPrizeModeStorageKey) === '1';
+        this.setAdvancedPrizeMode(advancedEnabled);
+    }
+
+    savePrizeSettings() {
+        const title = this.titleInput ? this.titleInput.value.trim() : 'Lucky Number Draw';
+        const settings = {
+            title: title || 'Lucky Number Draw',
+            numberRanges: this.numberRangesInput ? this.numberRangesInput.value.trim() : '1-500',
+            presetRounds: this.presetInput ? this.presetInput.value.trim() : ''
+        };
+        localStorage.setItem(this.prizeSettingsStorageKey, JSON.stringify(settings));
+        if (this.titleElement) this.titleElement.textContent = settings.title;
+    }
+
+    setAdvancedPrizeMode(enabled) {
+        if (this.advancedPrizeToggle) this.advancedPrizeToggle.checked = enabled;
+        if (this.advancedPrizePanel) this.advancedPrizePanel.classList.toggle('hidden', !enabled);
+        localStorage.setItem(this.advancedPrizeModeStorageKey, enabled ? '1' : '0');
+        if (enabled) {
+            this.renderCsvPresetList(this.csvPresetSelect ? this.csvPresetSelect.value : '');
+        }
     }
 
     getCsvPresets() {
@@ -1134,7 +1195,7 @@ Apple iPad Pro 12.9-inch,1`;
         }
         this.setCsvPresetStatus(preset
             ? `"${preset.name}" selected. Click Load selected to use it in the current CSV editor.`
-            : 'Current CSV editor is used when you start the game.'
+            : 'Simple mode uses the current CSV editor. Advanced mode can store up to 5 CSV sets.'
         );
         this.updateCsvPresetControls();
     }
@@ -1178,6 +1239,10 @@ Apple iPad Pro 12.9-inch,1`;
         if (existing) {
             this.showAlert(`"${name}" already exists. Choose it from Saved lists and use Update selected, or enter a new name.`);
             this.renderCsvPresetList(existing.id);
+            return;
+        }
+        if (presets.length >= this.maxCsvPresetCount) {
+            this.showAlert(`You can save up to ${this.maxCsvPresetCount} CSV sets. Delete one before saving a new set.`);
             return;
         }
 
@@ -1266,11 +1331,13 @@ Apple iPad Pro 12.9-inch,1`;
         }
         if (this.settingsModalDescription) {
             this.settingsModalDescription.textContent = mode === 'prize'
-                ? 'Configure the event title, draw range, and prize round CSV.'
+                ? 'Simple mode saves title, draw range, and CSV automatically. Use Advanced CSV sets only when needed.'
                 : 'Configure design, sound, and remote control options.';
         }
         this.settingsModal.classList.remove('hidden');
-        this.renderCsvPresetList(this.csvPresetSelect ? this.csvPresetSelect.value : '');
+        if (mode === 'prize') {
+            this.setAdvancedPrizeMode(localStorage.getItem(this.advancedPrizeModeStorageKey) === '1');
+        }
         // 사운드 옵션 라디오 상태 동기화
         const opt = this.selectedFlipSound;
         document.getElementById('flipSoundA').checked = (opt === 'a');
@@ -1301,6 +1368,7 @@ Apple iPad Pro 12.9-inch,1`;
         // Update title
         const newTitle = this.titleInput.value.trim() || 'Lucky Number Draw';
         this.titleElement.textContent = newTitle;
+        this.savePrizeSettings();
 
         // 사운드 옵션 저장
         if (document.getElementById('flipSoundA').checked) {
