@@ -52,12 +52,12 @@
                         </div>
                         <div class="input-group">
                             <label for="presetRounds">Current CSV editor</label>
-                            <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count">Amazon Kindle Paperwhite,6
+                            <textarea id="presetRounds" rows="8" placeholder="Prize Name, Draw Count, Image URL">Amazon Kindle Paperwhite,6
 Sony WH-1000XM5 Wireless Headphones,5
 Apple Watch Series 9,4
 PlayStation 5 Digital Edition,2
 Apple iPad Pro 12.9-inch,1</textarea>
-                            <p class="field-hint">Format: one prize per line, ending with the draw count. Example: Prize Name,3</p>
+                            <p class="field-hint">Format: one prize per line. Example: Prize Name,3 or Prize Name,3,https://example.com/photo.jpg</p>
                         </div>
                         <div class="section-actions">
                             <button id="loadExampleButton" class="control-button" type="button">Load Example</button>
@@ -163,20 +163,24 @@ Apple iPad Pro 12.9-inch,1</textarea>
 
             <!-- Lightbox for adjusting card count -->
             <div id="cardAdjustLightbox" class="lightbox hidden">
-                <div class="lightbox-content">
-                    <h1 id="currentPrizeName" class="prize-title"></h1>
-                    <div class="round-count-summary">
-                        <span>Draw count</span>
-                        <strong id="roundDrawCountDisplay">0</strong>
+                <div class="lightbox-content round-confirm-modal">
+                    <div class="prize-photo-panel">
+                        <div class="prize-photo-frame">
+                            <img id="prizeImagePreview" class="hidden" alt="">
+                            <span id="prizeImagePlaceholder">No photo</span>
+                        </div>
                     </div>
-                    <div id="roundCountEditPanel" class="input-group hidden">
-                        <label for="adjustCardCount">Edit draw count for this round:</label>
-                        <input type="number" id="adjustCardCount" min="1" max="2000" value="1">
-                    </div>
-                    <div class="button-group">
-                        <button id="editRoundCount" class="control-button" type="button">Edit count</button>
-                        <button id="confirmAdjust" class="main-button">Start Round</button>
-                        <button id="cancelAdjust" class="control-button">Cancel</button>
+                    <div class="round-confirm-body">
+                        <h1 id="currentPrizeName" class="prize-title"></h1>
+                        <div id="roundCountSummary" class="round-count-summary" role="button" tabindex="0">
+                            <strong id="roundDrawCountDisplay">0</strong>
+                        </div>
+                        <div id="roundCountEditPanel" class="input-group hidden">
+                            <input type="number" id="adjustCardCount" min="1" max="2000" value="1" aria-label="Draw count">
+                        </div>
+                        <div class="round-confirm-actions">
+                            <button id="confirmAdjust" class="main-button">Continue</button>
+                        </div>
                     </div>
                 </div>
             </div>

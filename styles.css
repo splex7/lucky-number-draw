@@ -380,7 +380,7 @@ h3 {
     width: min(96vw, 1680px);
     height: calc(100vh - 280px);
     min-height: 0;
-    padding: 0.85rem;
+    padding: clamp(1.25rem, 2vw, 2rem);
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
@@ -398,7 +398,7 @@ h3 {
     aspect-ratio: 1 / 1;
     perspective: 1000px;
     cursor: pointer;
-    contain: layout paint;
+    contain: layout;
 }
 
 .card-inner {
@@ -490,7 +490,9 @@ h3 {
     align-items: center;
     justify-content: center;
     padding: clamp(1rem, 3vw, 2rem);
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0, 0, 0, 0.84);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
 }
 
 .modal.hidden {
@@ -847,16 +849,85 @@ h3 {
     text-align: center;
 }
 
+.round-confirm-modal {
+    width: min(92vw, 860px);
+    display: grid;
+    grid-template-columns: minmax(260px, 42%) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+    overflow: hidden;
+    padding: 0;
+}
+
+.round-confirm-modal.no-prize-image {
+    width: min(92vw, 780px);
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.round-confirm-modal.no-prize-image .prize-photo-panel {
+    display: none;
+}
+
+.prize-photo-panel {
+    position: relative;
+    min-height: 260px;
+}
+
+.prize-photo-frame {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.prize-photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.prize-photo-frame span {
+    padding: 1rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    text-align: center;
+    line-height: 1.35;
+}
+
+.round-confirm-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(1.1rem, 2.4vw, 2rem);
+    padding-left: clamp(1.5rem, 3vw, 2.5rem);
+}
+
 .round-count-summary {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    justify-content: center;
     margin-bottom: 1rem;
     padding: 0.9rem 1rem;
     border: 1px solid var(--line);
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.round-count-summary:hover,
+.round-count-summary:focus-visible {
+    border-color: var(--line-strong);
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
 }
 
 .round-count-summary span {
@@ -866,8 +937,30 @@ h3 {
 
 .round-count-summary strong {
     color: var(--text);
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-size: clamp(3rem, 8vw, 5rem);
     line-height: 1;
+}
+
+.round-draw-count-reveal {
+    animation: drawCountReveal 520ms ease-out both;
+}
+
+@keyframes drawCountReveal {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.round-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
 }
 
 .dialog-message {
@@ -1040,7 +1133,7 @@ h3 {
     }
 
     .card-container {
-        grid-template-columns: repeat(var(--card-columns, 1), minmax(0, min(92px, calc((100vw - 2rem) / var(--card-columns, 1)))));
+        grid-template-columns: repeat(var(--card-columns, 1), minmax(0, min(92px, calc((100vw - 3rem) / var(--card-columns, 1)))));
         height: calc(100vh - 230px);
         width: 100%;
     }
@@ -1052,6 +1145,35 @@ h3 {
     .results-container,
     .history-container {
         max-height: 58vh;
+    }
+
+    .round-confirm-modal {
+        grid-template-columns: 1fr;
+        width: min(92vw, 440px);
+        gap: 1rem;
+        align-items: center;
+        padding: clamp(1.1rem, 2.4vw, 2rem);
+    }
+
+    .prize-photo-panel {
+        width: min(56vw, 220px);
+        min-height: 0;
+        margin: 0 auto;
+    }
+
+    .prize-photo-frame {
+        aspect-ratio: 1;
+        height: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+    }
+
+    .round-confirm-body {
+        padding: 0;
+    }
+
+    .round-confirm-modal.no-prize-image .prize-photo-panel {
+        display: none;
     }
 
     .history-item {

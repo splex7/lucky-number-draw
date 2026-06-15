@@ -12,6 +12,7 @@ class DrawSystem {
         this.numberPool = [];
         this.maxLimit = 2000;
         this.flipSpeedStep = 3; // 1..5, default 3
+        this.roundDrawCountAnimation = null;
 
         // Create and preload audio objects for flip sounds
         this.flipSoundA = new Audio('flip-a.mp3');
@@ -111,10 +112,11 @@ class DrawSystem {
         this.cardAdjustLightbox = document.getElementById('cardAdjustLightbox');
         this.adjustCardCountInput = document.getElementById('adjustCardCount');
         this.confirmAdjustButton = document.getElementById('confirmAdjust');
-        this.cancelAdjustButton = document.getElementById('cancelAdjust');
-        this.editRoundCountButton = document.getElementById('editRoundCount');
         this.roundDrawCountDisplay = document.getElementById('roundDrawCountDisplay');
+        this.roundCountSummary = document.getElementById('roundCountSummary');
         this.roundCountEditPanel = document.getElementById('roundCountEditPanel');
+        this.prizeImagePreview = document.getElementById('prizeImagePreview');
+        this.prizeImagePlaceholder = document.getElementById('prizeImagePlaceholder');
 
         // History elements
         this.historyScreen = document.getElementById('historyScreen');
@@ -192,9 +194,15 @@ class DrawSystem {
 
         // Lightbox event listeners
         this.confirmAdjustButton.addEventListener('click', () => this.confirmCardAdjustment());
-        this.cancelAdjustButton.addEventListener('click', () => this.hideLightbox());
-        if (this.editRoundCountButton) {
-            this.editRoundCountButton.addEventListener('click', () => this.showRoundCountEditor());
+        if (this.roundCountSummary) {
+            this.roundCountSummary.addEventListener('click', () => this.showRoundCountEditor());
+            this.roundCountSummary.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.showRoundCountEditor();
+                }
+            });
         }
 
         // Card container click event for starting card flips
@@ -345,6 +353,7 @@ class DrawSystem {
             // Game state data
             rounds: this.rounds,
             prizes: this.prizes,
+            prizeImages: this.prizeImages,
             currentRound: this.currentRound,
             usedNumbers: Array.from(this.usedNumbers),
             reservedNumbers: Array.from(this.reservedNumbers),
@@ -379,6 +388,7 @@ class DrawSystem {
             // Restore game state if it exists
             this.rounds = state.rounds || [];
             this.prizes = state.prizes || [];
+            this.prizeImages = state.prizeImages || [];
             this.currentRound = state.currentRound || 1;
             this.usedNumbers = new Set(state.usedNumbers || []);
             this.reservedNumbers = new Set(state.reservedNumbers || []);
@@ -798,6 +808,7 @@ class DrawSystem {
         this.currentRoundNumbers = [];
         this.roundResults = [];
         this.prizes = [];
+        this.prizeImages = [];
         this.rounds = [];
 
         const presetValues = this.presetInput.value.trim();
@@ -825,11 +836,12 @@ class DrawSystem {
                 if (/^\d+$/.test(parts[i])) { countIndex = i; break; }
             }
             if (countIndex === -1) {
-                await this.showAlert('Each line must end with a numeric draw count.');
+                await this.showAlert('Each line must include a numeric draw count.');
                 return;
             }
             const numberCount = parseInt(parts[countIndex], 10);
             const prize = parts.slice(0, countIndex).join(', ').trim();
+            const imageUrl = parts.slice(countIndex + 1).join(', ').trim();
 
             if (!prize || isNaN(numberCount) || numberCount <= 0 || numberCount > this.numberPool.length) {
                 await this.showAlert('Please enter the correct format (Product Name, Draw Count).');
@@ -838,6 +850,7 @@ class DrawSystem {
 
             this.rounds.push(numberCount);
             this.prizes.push(prize);
+            this.prizeImages.push(imageUrl);
         }
 
         const firstRoundCount = this.rounds[0];
@@ -848,13 +861,11 @@ class DrawSystem {
             return;
         }
 
-        const shouldStart = await this.showConfirm(
-            `The first prize is "${this.prizes[0]}".\nDraw count: ${firstRoundCount}\n\nStart now?`,
-            'Start Draw',
-            'Start',
-            'Cancel'
-        );
-        if (!shouldStart) return;
+        await this.showAppDialog({
+            title: 'First Prize',
+            message: `The first prize is "${this.prizes[0]}". Continue with this prize.`,
+            confirmText: 'Continue'
+        });
 
         this.currentRoundNumbers = this.generateUniqueNumbers(firstRoundCount);
         if (this.currentRoundNumbers.length !== firstRoundCount) {
@@ -916,25 +927,59 @@ class DrawSystem {
         this.cardAdjustLightbox.classList.remove('hidden');
         this.adjustCardCountInput.value = this.currentRoundNumbers.length;
         if (this.roundDrawCountDisplay) {
-            this.roundDrawCountDisplay.textContent = this.currentRoundNumbers.length;
+            this.roundDrawCountDisplay.classList.remove('round-draw-count-reveal');
+            void this.roundDrawCountDisplay.offsetWidth;
+            this.roundDrawCountDisplay.classList.add('round-draw-count-reveal');
+            this.animateRoundDrawCount(this.currentRoundNumbers.length);
         }
         if (this.roundCountEditPanel) {
             this.roundCountEditPanel.classList.add('hidden');
         }
-        if (this.editRoundCountButton) {
-            this.editRoundCountButton.classList.remove('hidden');
-        }
         if (this.confirmAdjustButton) {
-            this.confirmAdjustButton.textContent = this.currentRound === 1 ? 'Start Round' : 'Continue';
+            this.confirmAdjustButton.textContent = 'Continue';
         }
         // Set current prize name
         const currentPrize = this.prizes[this.currentRound - 1];
         const prizeTitleEl = document.getElementById('currentPrizeName');
-        const lightboxContent = this.cardAdjustLightbox.querySelector('.lightbox-content');
         prizeTitleEl.textContent = currentPrize;
+        this.updatePrizeImagePreview(this.prizeImages[this.currentRound - 1]);
         // Dynamically constrain max selectable cards to remaining pool size
         const remainingPossibleNumbers = this.numberPool.length - this.reservedNumbers.size + this.currentRoundNumbers.length;
         this.adjustCardCountInput.setAttribute('max', String(Math.min(this.maxLimit, remainingPossibleNumbers)));
+    }
+
+    animateRoundDrawCount(targetCount) {
+        if (!this.roundDrawCountDisplay) return;
+        if (this.roundDrawCountAnimation) {
+            cancelAnimationFrame(this.roundDrawCountAnimation);
+            this.roundDrawCountAnimation = null;
+        }
+
+        const target = Math.max(0, Number(targetCount) || 0);
+        const holdDuration = 1000;
+        const duration = 900;
+        const startTime = performance.now();
+
+        const step = (now) => {
+            const elapsed = now - startTime;
+            if (elapsed < holdDuration) {
+                this.roundDrawCountDisplay.textContent = '0';
+                this.roundDrawCountAnimation = requestAnimationFrame(step);
+                return;
+            }
+            const progress = Math.min(1, (elapsed - holdDuration) / duration);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            this.roundDrawCountDisplay.textContent = Math.round(target * eased);
+            if (progress < 1) {
+                this.roundDrawCountAnimation = requestAnimationFrame(step);
+                return;
+            }
+            this.roundDrawCountDisplay.textContent = target;
+            this.roundDrawCountAnimation = null;
+        };
+
+        this.roundDrawCountDisplay.textContent = '0';
+        this.roundDrawCountAnimation = requestAnimationFrame(step);
     }
 
     hideLightbox() {
@@ -945,16 +990,42 @@ class DrawSystem {
         if (this.roundCountEditPanel) {
             this.roundCountEditPanel.classList.remove('hidden');
         }
-        if (this.editRoundCountButton) {
-            this.editRoundCountButton.classList.add('hidden');
-        }
         if (this.confirmAdjustButton) {
-            this.confirmAdjustButton.textContent = 'Apply & Continue';
+            this.confirmAdjustButton.textContent = 'Continue';
         }
         if (this.adjustCardCountInput) {
             this.adjustCardCountInput.focus();
             this.adjustCardCountInput.select();
         }
+    }
+
+    updatePrizeImagePreview(imageUrl) {
+        const url = typeof imageUrl === 'string' ? imageUrl.trim() : '';
+        if (!this.prizeImagePreview || !this.prizeImagePlaceholder) return;
+        const modalContent = this.cardAdjustLightbox ? this.cardAdjustLightbox.querySelector('.round-confirm-modal') : null;
+
+        if (!url) {
+            if (modalContent) modalContent.classList.add('no-prize-image');
+            this.prizeImagePreview.classList.add('hidden');
+            this.prizeImagePreview.removeAttribute('src');
+            this.prizeImagePlaceholder.textContent = 'No photo';
+            this.prizeImagePlaceholder.classList.remove('hidden');
+            return;
+        }
+
+        if (modalContent) modalContent.classList.remove('no-prize-image');
+        this.prizeImagePlaceholder.classList.add('hidden');
+        this.prizeImagePreview.onload = () => {
+            this.prizeImagePreview.classList.remove('hidden');
+            this.prizeImagePlaceholder.classList.add('hidden');
+        };
+        this.prizeImagePreview.onerror = () => {
+            this.prizeImagePreview.classList.add('hidden');
+            this.prizeImagePreview.removeAttribute('src');
+            this.prizeImagePlaceholder.textContent = 'Image unavailable';
+            this.prizeImagePlaceholder.classList.remove('hidden');
+        };
+        this.prizeImagePreview.src = url;
     }
 
     async confirmCardAdjustment() {
@@ -985,6 +1056,7 @@ class DrawSystem {
         this.currentRoundNumbers = this.generateUniqueNumbers(newCount);
         this.createCards(newCount);
         this.updateCardsRemaining();
+        this.rounds[this.currentRound - 1] = newCount;
         if (this.roundDrawCountDisplay) {
             this.roundDrawCountDisplay.textContent = newCount;
         }

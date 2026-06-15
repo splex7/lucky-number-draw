@@ -15,7 +15,7 @@ A browser-based lucky draw system for live prize events. It supports animated ca
   - Simple mode for custom event title, draw range, and current prize CSV editor
   - Draw ranges such as `1-500` or `1-442, 501-872`
   - Up to 2000 total numbers
-  - Prize CSV editor using `Prize Name, Draw Count`
+  - Prize CSV editor using `Prize Name, Draw Count` or `Prize Name, Draw Count, Image URL`
   - Automatic `localStorage` saving for simple prize setup changes
   - Advanced CSV sets using `localStorage`
   - Load, save, update, and delete up to 5 CSV presets
@@ -23,10 +23,12 @@ A browser-based lucky draw system for live prize events. It supports animated ca
   - Flip sound options using MP3 and generated HTML/Web Audio effects
   - Optional remote controller entry point
 - **Round management**:
-  - First-prize confirmation before starting
-  - Fixed draw count display by default
-  - Edit count only when needed
+  - First-prize confirmation before starting, without revealing the first draw count
+  - Prize confirmation modal with optional prize image preview
+  - Dramatic draw count reveal that counts up from 0 after a short pause
+  - Edit count by clicking the draw count section only when needed
   - Balanced card grid with up to 8 cards per row
+  - Extra card spacing so reveal shadows are not clipped
   - Automatic duplicate prevention across rounds
 - **Results and history**:
   - Round-by-round results
@@ -53,9 +55,21 @@ Optional remote control requires a `firebaseConfig.js` file based on `firebaseCo
 3. Click **Settings** to choose flip sounds or open the remote controller.
 4. Click **Start Draw**.
 5. Confirm the first prize in the app dialog.
-6. Start card flips by pressing Enter or clicking an unrevealed card.
-7. Continue rounds with **Next Round**.
-8. End the game to view and copy results.
+6. Review the round modal, optionally click the count to adjust it, then click **Continue**.
+7. Start card flips by pressing Enter or clicking an unrevealed card.
+8. Continue rounds with **Next Round**.
+9. End the game to view and copy results.
+
+### Prize CSV Format
+
+Each line must include a prize name and draw count. A third image URL column is optional:
+
+```csv
+Amazon Kindle Paperwhite,6
+Apple iPad Pro 12.9-inch,1,https://example.com/ipad.jpg
+```
+
+When an image URL is present, the round confirmation modal displays the image cropped to fit the prize photo area. When it is omitted, the image area is hidden.
 
 ## 한국어 안내
 
@@ -68,9 +82,12 @@ Optional remote control requires a `firebaseConfig.js` file based on `firebaseCo
 - **Settings 분리**: 디자인 상태, 플립 사운드, 원격 컨트롤러
 - **로컬 저장**: 심플 Prize 설정, CSV 세트, 추첨 히스토리를 `localStorage`에 저장
 - **앱 내부 모달**: 브라우저 기본 `alert`/`confirm` 대신 일관된 확인/알림 UI 사용
-- **라운드 시작 확인**: 첫 경품명과 수량을 확인한 뒤 추첨 시작
-- **수량 수정 모드**: 기본은 확정 수량 표시, 필요할 때만 `Edit count`로 수정
+- **라운드 시작 확인**: 첫 경품명을 확인한 뒤 추첨 시작, 첫 수량은 시작 확인 모달에서 공개하지 않음
+- **경품 이미지**: CSV 3번째 컬럼에 이미지 URL을 넣으면 경품 모달에 이미지 표시
+- **수량 연출**: 경품 모달의 수량이 0에서 목표 개수까지 증가
+- **수량 수정 모드**: 수량 영역을 클릭할 때만 수정 입력 표시
 - **균형 카드 배치**: 한 줄 최대 8개, 10개면 5개/5개처럼 행별 카드 수를 최대한 균등하게 배치
+- **카드 그림자 여백**: 카드 공개 효과의 shadow가 잘리지 않도록 카드 영역 여백 확보
 
 ### 사용 방법
 
@@ -78,9 +95,10 @@ Optional remote control requires a `firebaseConfig.js` file based on `firebaseCo
 2. 여러 CSV를 재사용해야 할 때만 **Advanced CSV sets**를 켜고 최대 5개까지 저장합니다.
 3. **Settings**에서 사운드와 원격 컨트롤러를 설정합니다.
 4. **Start Draw**를 눌러 첫 경품 확인 후 추첨을 시작합니다.
-5. 카드를 클릭하거나 Enter를 눌러 번호를 공개합니다.
-6. 라운드가 끝나면 **Next Round**로 다음 경품을 진행합니다.
-7. 종료 후 결과를 확인하고 복사합니다.
+5. 경품 모달에서 수량을 확인하고 필요하면 수량 영역을 클릭해 수정한 뒤 **Continue**를 누릅니다.
+6. 카드를 클릭하거나 Enter를 눌러 번호를 공개합니다.
+7. 라운드가 끝나면 **Next Round**로 다음 경품을 진행합니다.
+8. 종료 후 결과를 확인하고 복사합니다.
 
 ## Technical Details
 
